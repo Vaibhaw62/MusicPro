@@ -7,6 +7,7 @@ const MusicPlayer = () => {
   const {
     currentSong, isPlaying, pauseSong, resumeSong, toggleLike,
     likedSongs, playNext, playPrev, currentTime, setCurrentTime,
+    seekRequest, seekTo, clearSeekRequest,
     setPlayerOpen, isPlayerOpen,
     volume, isMuted, setVolume, toggleMute
   } = useMusicStore();
@@ -28,10 +29,6 @@ const MusicPlayer = () => {
         audioRef.current.load();
 
         // Restore time if we have one saved (and it's a resume)
-        if (currentTime > 0) {
-          audioRef.current.currentTime = currentTime;
-        }
-
         if (isPlaying) audioRef.current.play().catch(() => { });
       } else if (isPlaying) {
         audioRef.current.play().catch(() => { });
@@ -40,6 +37,32 @@ const MusicPlayer = () => {
       }
     }
   }, [currentSong, isPlaying]);
+
+  useEffect(() => {
+    if (!audioRef.current || !seekRequest) return;
+    const audio = audioRef.current;
+    const target = Number(seekRequest.time);
+    if (!Number.isFinite(target)) return;
+
+    const applySeek = () => {
+      try {
+        audio.currentTime = target;
+        setCurrentTime(target);
+      } catch (error) {
+        console.warn('Seek failed while media is still loading:', error);
+      } finally {
+        clearSeekRequest();
+      }
+    };
+
+    if (audio.readyState >= 1) {
+      applySeek();
+      return;
+    }
+
+    audio.addEventListener('loadedmetadata', applySeek, { once: true });
+    return () => audio.removeEventListener('loadedmetadata', applySeek);
+  }, [seekRequest, setCurrentTime, clearSeekRequest]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -54,15 +77,10 @@ const MusicPlayer = () => {
 
   const handleSeek = (e) => {
     const newTime = parseFloat(e.target.value);
-    if (audioRef.current) audioRef.current.currentTime = newTime;
-    setCurrentTime(newTime);
+    seekTo(newTime);
   };
 
   if (!currentSong) return null;
-
-  const duration = audioRef.current?.duration || 100;
-  // Ensure we never get > 100% or NaN
-  const progressPercent = Math.min(100, Math.max(0, (currentTime / duration) * 100)) || 0;
 
   return (
     <>
@@ -70,6 +88,7 @@ const MusicPlayer = () => {
         ref={audioRef}
         onEnded={playNext}
         onTimeUpdate={handleTimeUpdate}
+        preload="metadata"
       />
 
       {/* PLAYER BAR */}

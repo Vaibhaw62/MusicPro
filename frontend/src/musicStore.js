@@ -1,18 +1,21 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { fetchSongs as fetchSongsApi } from './api'; 
 import axios from 'axios';
-import { API_URL } from './api';
+import { API_URL, fetchRecommendations as fetchRecommendationsApi, fetchSongs as fetchSongsApi } from './api';
 
-// 🟢 Define a "Factory Default" state for clean handovers
 const initialState = {
   songs: [],
+  recommendations: [],
+  recentlyPlayed: [],
+  playEvents: [],
   currentSong: null,
   isPlaying: false,
   isLoading: false,
-  likedSongs: [], 
-  view: 'home', // 🛡️ Always start fresh at the Discover page
-  currentTime: 0, 
+  isRecommendationsLoading: false,
+  likedSongs: [],
+  view: 'home',
+  currentTime: 0,
+  seekRequest: null,
   isPlayerOpen: false,
   skip: 0,
   hasMore: true,
@@ -20,78 +23,143 @@ const initialState = {
   selectedGenre: 'all',
   selectedMood: 'all',
   selectedDuration: 'all',
-  selectedLanguage: 'all', 
+  selectedLanguage: 'all',
 };
+
+const songKey = (song) => String(song?.id || song?.msg_id || '');
+const songSignature = (song) => `${song?.title || ''}|${song?.artist || ''}`
+  .toLowerCase()
+  .replace(/[^a-z0-9|]/g, '');
+
+const looksRandom = (token) => {
+  const clean = String(token || '').replace(/[^A-Za-z0-9]/g, '');
+  if (clean.length < 4 || clean.length > 16) return false;
+  if (/^[A-Z][a-z]+$/.test(clean)) return false;
+  if (/\d/.test(clean) && /[A-Za-z]/.test(clean)) return true;
+  const vowels = (clean.match(/[aeiou]/gi) || []).length;
+  const consonants = (clean.match(/[bcdfghjklmnpqrstvwxyz]/gi) || []).length;
+  return /[a-z]/.test(clean) && /[A-Z]/.test(clean) && vowels <= 1 && consonants >= 3;
+};
+
+const cleanDisplayTitle = (title) => {
+  const words = String(title || 'Unknown Title')
+    .replace(/\.(mp3|m4a|flac|wav)$/i, '')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\b(stereo|remastered?|full song|video song|lyrics?)\b/gi, '')
+    .trim()
+    .split(/\s+/);
+
+  while (words.length > 1) {
+    const tail4 = words.slice(-4).join('');
+    const tail3 = words.slice(-3).join('');
+    const tail2 = words.slice(-2).join('');
+    if (looksRandom(tail4) || looksRandom(tail3) || looksRandom(tail2) || looksRandom(words[words.length - 1])) {
+      words.pop();
+      continue;
+    }
+    break;
+  }
+
+  return words.join(' ').replace(/[\s,.-]+(?:pt|part)\.?\s*$/i, '').replace(/\s+/g, ' ').trim() || 'Unknown Title';
+};
+
+const uniqueBySong = (songs) => {
+  const seenIds = new Set();
+  const seenSignatures = new Set();
+  return songs.filter((song) => {
+    const key = songKey(song);
+    const signature = songSignature(song);
+    if (!key || seenIds.has(key) || seenSignatures.has(signature)) return false;
+    seenIds.add(key);
+    seenSignatures.add(signature);
+    return true;
+  });
+};
+
+const sanitizeSong = (song) => ({
+  ...song,
+  id: songKey(song),
+  title: cleanDisplayTitle(song?.title),
+  artist: song?.artist || 'Unknown Artist',
+  description: song?.description || '',
+  album_art: song?.album_art || 'https://placehold.co/300',
+});
 
 const useMusicStore = create(
   persist(
     (set, get) => ({
       ...initialState,
-      user: null, 
+      user: null,
       volume: 0.7,
       isMuted: false,
       prevVolume: 0.7,
 
-      // --- AUTH ACTIONS ---
       login: async (username, password) => {
-        try {
-          const res = await axios.post(`${API_URL}/auth/login`, { username, password });
-          const { access_token, state } = res.data;
-          
-          // 🛡️ RESET TO DEFAULTS: Scrub UI data before applying new user credentials
-          set({ ...initialState, user: { username, access_token } });
+        const res = await axios.post(`${API_URL}/auth/login`, { username, password });
+        const { access_token, state } = res.data;
 
-          // ☁️ MERGE CLOUD STATE: Apply permanent preferences from MongoDB
-          if (state) {
-            set({
-              likedSongs: state.liked_songs || [],
-              volume: state.volume ?? 0.7,
-              selectedLanguage: state.selected_language || "all"
-            });
-          }
-          
-          // 📡 Initial Fetch for the new user
-          get().fetchSongs();
-          return { success: true };
-        } catch (error) {
-          throw error;
+        set({ ...initialState, user: { username, access_token } });
+
+        if (state) {
+          set({
+            likedSongs: uniqueBySong((state.liked_songs || []).map(sanitizeSong)),
+            recentlyPlayed: uniqueBySong((state.recently_played || []).map(sanitizeSong)),
+            playEvents: state.play_events || [],
+            volume: state.volume ?? 0.7,
+            selectedLanguage: state.selected_language || 'all',
+          });
         }
+
+        get().fetchSongs();
+        get().fetchRecommendations();
+        return { success: true };
       },
 
       logout: () => {
-        // 🧹 Wipe everything back to factory defaults to prevent session leakage
         set({ ...initialState, user: null });
+        localStorage.removeItem('music-pro-storage-v18');
+        localStorage.removeItem('music-pro-storage-v17');
         localStorage.removeItem('music-pro-storage-v16');
       },
 
-      // --- CLOUD SYNC ENGINE ---
       syncToCloud: async () => {
-        const { user, likedSongs, currentSong, volume, selectedLanguage } = get();
+        const {
+          user,
+          likedSongs,
+          currentSong,
+          recentlyPlayed,
+          playEvents,
+          volume,
+          selectedLanguage,
+        } = get();
         if (!user?.access_token) return;
 
         try {
           await axios.post(
-            `${API_URL}/user/sync`, 
+            `${API_URL}/user/sync`,
             {
               liked_songs: likedSongs,
               current_song: currentSong,
-              volume: volume,
-              selected_language: selectedLanguage
+              recently_played: recentlyPlayed.slice(0, 40),
+              play_events: playEvents.slice(-200),
+              volume,
+              selected_language: selectedLanguage,
             },
-            { headers: { Authorization: `Bearer ${user.access_token}` } }
+            { headers: { Authorization: `Bearer ${user.access_token}` } },
           );
-        } catch (e) {
-          console.error("Cloud Sync Failed:", e);
+        } catch (error) {
+          console.error('Cloud sync failed:', error);
         }
       },
 
-      // --- SETTERS (With Auto-Sync) ---
-      setView: (v) => set({ view: v }),
+      setView: (view) => set({ view }),
       setCurrentTime: (time) => set({ currentTime: time }),
+      seekTo: (time) => set({ currentTime: time, seekRequest: { time, issuedAt: Date.now() } }),
+      clearSeekRequest: () => set({ seekRequest: null }),
       setPlayerOpen: (isOpen) => set({ isPlayerOpen: isOpen }),
 
       setSearchQuery: (query) => {
-        set({ searchQuery: query, skip: 0, songs: [], hasMore: true });
+        set({ searchQuery: query, skip: 0, songs: [], hasMore: true, view: 'home' });
         get().fetchSongs();
       },
       setGenre: (genre) => {
@@ -109,13 +177,13 @@ const useMusicStore = create(
       setLanguage: (language) => {
         set({ selectedLanguage: language, skip: 0, songs: [], hasMore: true });
         get().fetchSongs();
-        get().syncToCloud(); 
+        get().syncToCloud();
       },
-      
+
       setVolume: (vol) => {
         if (vol === 0) set({ volume: 0, isMuted: true });
         else set({ volume: vol, isMuted: false, prevVolume: vol });
-        get().syncToCloud(); 
+        get().syncToCloud();
       },
 
       toggleMute: () => {
@@ -125,123 +193,155 @@ const useMusicStore = create(
         get().syncToCloud();
       },
 
-      // --- FETCH ENGINE (With Deduplication) ---
       fetchSongs: async (isLoadMore = false) => {
-        const { 
-          searchQuery, selectedGenre, selectedMood, selectedDuration, selectedLanguage, 
-          skip, songs, hasMore, isLoading 
+        const {
+          searchQuery,
+          selectedGenre,
+          selectedMood,
+          selectedDuration,
+          selectedLanguage,
+          skip,
+          hasMore,
+          isLoading,
         } = get();
-        
-        if (isLoading) return; 
-        if (isLoadMore && !hasMore) return; 
 
+        if (isLoading || (isLoadMore && !hasMore)) return;
         set({ isLoading: true });
 
         try {
-          const limit = 50; 
+          const limit = 50;
           const results = await fetchSongsApi(
-            searchQuery, limit, selectedGenre, selectedMood, selectedDuration, 
-            isLoadMore ? skip : 0, 
-            selectedLanguage
+            searchQuery,
+            limit,
+            selectedGenre,
+            selectedMood,
+            selectedDuration,
+            isLoadMore ? skip : 0,
+            selectedLanguage,
           );
 
-          const newRawSongs = results || [];
-          
+          const incoming = (results || []).map(sanitizeSong);
           set((state) => {
-            const baseSongs = isLoadMore ? state.songs : [];
-            const combinedSongs = [...baseSongs, ...newRawSongs];
-
-            const uniqueSongs = [];
-            const seenIds = new Set();
-            const seenSignatures = new Set();
-
-            combinedSongs.forEach(song => {
-                const idKey = String(song.id);
-                const cleanTitle = (song.title || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-                const cleanArtist = (song.artist || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-                const sigKey = `${cleanTitle}|${cleanArtist}`;
-
-                if (!seenIds.has(idKey) && !seenSignatures.has(sigKey)) {
-                    seenIds.add(idKey);
-                    seenSignatures.add(sigKey);
-                    uniqueSongs.push(song);
-                }
-            });
-
-            return { 
-              songs: uniqueSongs,
+            const merged = uniqueBySong([...(isLoadMore ? state.songs : []), ...incoming]);
+            return {
+              songs: merged,
               skip: isLoadMore ? state.skip + limit : limit,
-              hasMore: newRawSongs.length === limit, 
-              isLoading: false 
+              hasMore: incoming.length === limit,
+              isLoading: false,
             };
           });
-
-          if (newRawSongs.length > 0 && get().songs.length === 0 && isLoadMore) {
-             get().fetchSongs(true);
-          }
-
         } catch (error) {
-          console.error("Store Error:", error);
+          console.error('Store fetch error:', error);
           set({ isLoading: false });
         }
       },
 
-      // --- PLAYBACK ---
-      setCurrentSong: (song) => {
-        set({ currentSong: song, isPlaying: true, currentTime: 0 });
-        get().syncToCloud(); 
-      },
-      pauseSong: () => set({ isPlaying: false }),
-      resumeSong: () => set({ isPlaying: true }),
-      
-      playNext: () => {
-        const { currentSong, songs, likedSongs, view } = get();
-        const activeList = view === 'home' ? songs : likedSongs;
-        const index = activeList.findIndex(s => String(s.id) === String(currentSong?.id));
-        if (index !== -1 && index < activeList.length - 1) {
-            get().setCurrentSong(activeList[index + 1]);
+      fetchRecommendations: async () => {
+        const { likedSongs, recentlyPlayed, playEvents } = get();
+        if (!likedSongs.length && !recentlyPlayed.length && !playEvents.length) {
+          set({ recommendations: [], isRecommendationsLoading: false });
+          return;
         }
+        set({ isRecommendationsLoading: true });
+        const results = await fetchRecommendationsApi(40);
+        set({
+          recommendations: uniqueBySong((results || []).map(sanitizeSong)),
+          isRecommendationsLoading: false,
+        });
       },
-      
-      playPrev: () => {
-        const { currentSong, songs, likedSongs, view } = get();
-        const activeList = view === 'home' ? songs : likedSongs;
-        const index = activeList.findIndex(s => String(s.id) === String(currentSong?.id));
-        if (index > 0) {
-            get().setCurrentSong(activeList[index - 1]);
+
+      setCurrentSong: (rawSong) => {
+        const song = sanitizeSong(rawSong);
+        const previous = get().currentSong;
+        const playedSeconds = get().currentTime || 0;
+        const completion = previous?.duration_seconds ? Math.min(1, playedSeconds / previous.duration_seconds) : 0;
+        const playEvent = previous
+          ? { song: previous, played_seconds: playedSeconds, completion, at: new Date().toISOString() }
+          : null;
+
+        set((state) => ({
+          currentSong: song,
+          isPlaying: true,
+          currentTime: 0,
+          recentlyPlayed: uniqueBySong([song, ...state.recentlyPlayed]).slice(0, 40),
+          playEvents: playEvent ? [...state.playEvents.slice(-199), playEvent] : state.playEvents,
+        }));
+
+        get().syncToCloud();
+        get().fetchRecommendations();
+      },
+
+      pauseSong: () => {
+        set({ isPlaying: false });
+        get().syncToCloud();
+      },
+      resumeSong: () => set({ isPlaying: true }),
+
+      playNext: () => {
+        const { currentSong, songs, likedSongs, recentlyPlayed, recommendations, view } = get();
+        const activeList =
+          view === 'liked' ? likedSongs
+            : view === 'recent' ? recentlyPlayed
+              : view === 'recommended' ? recommendations
+                : songs;
+        const index = activeList.findIndex((song) => songKey(song) === songKey(currentSong));
+        if (index !== -1 && index < activeList.length - 1) {
+          get().setCurrentSong(activeList[index + 1]);
         }
       },
 
-      // --- LIKED SONGS ---
+      playPrev: () => {
+        const { currentSong, songs, likedSongs, recentlyPlayed, recommendations, view } = get();
+        const activeList =
+          view === 'liked' ? likedSongs
+            : view === 'recent' ? recentlyPlayed
+              : view === 'recommended' ? recommendations
+                : songs;
+        const index = activeList.findIndex((song) => songKey(song) === songKey(currentSong));
+        if (index > 0) get().setCurrentSong(activeList[index - 1]);
+      },
+
       toggleLike: (song) => {
-        const { likedSongs } = get();
-        const songId = String(song.id);
-        const isLiked = likedSongs.some(s => String(s.id) === songId);
-        
-        if (isLiked) {
-            set({ likedSongs: likedSongs.filter(s => String(s.id) !== songId) });
-        } else {
-            set({ likedSongs: [...likedSongs, song] });
-        }
-        get().syncToCloud(); 
+        const cleanSong = sanitizeSong(song);
+        const isLiked = get().likedSongs.some((item) => songKey(item) === songKey(cleanSong));
+        set((state) => ({
+          likedSongs: isLiked
+            ? state.likedSongs.filter((item) => songKey(item) !== songKey(cleanSong))
+            : uniqueBySong([cleanSong, ...state.likedSongs]),
+        }));
+        get().syncToCloud();
+        get().fetchRecommendations();
       },
 
       resetFilters: () => {
-        set({ ...initialState });
+        set({
+          songs: [],
+          skip: 0,
+          hasMore: true,
+          searchQuery: '',
+          selectedGenre: 'all',
+          selectedMood: 'all',
+          selectedDuration: 'all',
+          selectedLanguage: 'all',
+          view: 'home',
+        });
         get().fetchSongs();
+        get().syncToCloud();
       },
     }),
     {
-      name: 'music-pro-storage-v16',
+      name: 'music-pro-storage-v18',
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ 
+      partialize: (state) => ({
         user: state.user,
         likedSongs: state.likedSongs,
+        recentlyPlayed: state.recentlyPlayed,
+        playEvents: state.playEvents,
         volume: state.volume,
-        selectedLanguage: state.selectedLanguage 
+        selectedLanguage: state.selectedLanguage,
       }),
-    }
-  )
+    },
+  ),
 );
 
 export default useMusicStore;

@@ -2,8 +2,7 @@ import React, { useState, useMemo } from 'react';
 import useMusicStore from '../musicStore';
 import axios from 'axios';
 import { API_URL } from '../api';
-import { motion } from 'framer-motion';
-import { Music2, User, Lock, ArrowRight, Sparkles, Check, X } from 'lucide-react';
+import { Music2, User, Lock, ArrowRight, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Login = () => {
@@ -70,20 +69,12 @@ const Login = () => {
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-500/10 blur-[120px] rounded-full animate-pulse" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-cyan-500/10 blur-[120px] rounded-full" />
 
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-md z-10"
-            >
+            <div className="w-full max-w-md z-10">
                 {/* LOGO SECTION */}
                 <div className="text-center mb-10">
-                    <motion.div 
-                        initial={{ scale: 0.5 }}
-                        animate={{ scale: 1 }}
-                        className="inline-flex p-4 rounded-3xl bg-gradient-to-br from-emerald-400 to-cyan-600 mb-6 shadow-[0_0_40px_rgba(16,185,129,0.3)]"
-                    >
+                    <div className="inline-flex p-4 rounded-3xl bg-gradient-to-br from-emerald-400 to-cyan-600 mb-6 shadow-[0_0_40px_rgba(16,185,129,0.3)]">
                         <Music2 size={40} className="text-black" />
-                    </motion.div>
+                    </div>
                     <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-white mb-2 uppercase">
                         VIBE<span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500">STREAM</span>
                     </h1>
@@ -143,16 +134,14 @@ const Login = () => {
                             )}
                         </div>
 
-                        <motion.button 
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
+                        <button 
                             disabled={isLoading}
                             type="submit"
                             className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 text-black py-4 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 disabled:opacity-50 transition-all"
                         >
                             {isRegister ? "Create Account" : "Sign In"}
                             <ArrowRight size={20} />
-                        </motion.button>
+                        </button>
 
                         <div className="text-center">
                             <button 
@@ -168,7 +157,7 @@ const Login = () => {
                         </div>
                     </form>
                 </div>
-            </motion.div>
+            </div>
         </div>
     );
 };

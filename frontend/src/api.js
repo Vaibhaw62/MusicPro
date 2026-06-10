@@ -4,7 +4,7 @@ import useMusicStore from './musicStore'; // 🟢 Added to handle auto-logout
 // 🟢 LOGIC: Environment-aware URL switching
 export const API_URL = import.meta.env.PROD 
   ? 'https://music-app-backend-twia.onrender.com' 
-  : 'http://localhost:8000';
+  : (import.meta.env.VITE_API_URL || 'http://localhost:8007');
 
 export const api = axios.create({
   baseURL: API_URL,
@@ -18,7 +18,7 @@ api.interceptors.request.use((config) => {
   }
 
   try {
-    const storage = localStorage.getItem('music-pro-storage-v16');
+    const storage = localStorage.getItem('music-pro-storage-v18');
     if (storage) {
       const parsed = JSON.parse(storage);
       const token = parsed.state?.user?.access_token;
@@ -73,6 +73,18 @@ export const fetchSongs = async (search, limit, genre, mood, listen, skip = 0, l
     return response.data.results;
   } catch (error) {
     console.error("❌ [API ERROR] Failed to fetch songs:", error);
+    return [];
+  }
+};
+
+export const fetchRecommendations = async (limit = 40) => {
+  try {
+    const response = await api.get('/recommendations', {
+      params: { limit },
+    });
+    return response.data.results || [];
+  } catch (error) {
+    console.error("Recommendation fetch failed:", error);
     return [];
   }
 };
