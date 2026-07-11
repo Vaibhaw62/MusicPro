@@ -1,9 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-<<<<<<< HEAD
 import { ArrowLeft, ArrowUp, Disc3, Menu, Music2,Sparkles, X } from 'lucide-react';
-=======
-import { ArrowLeft, ArrowUp, Disc3, Menu, Music2, X } from 'lucide-react';
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
 import { Toaster } from 'react-hot-toast';
 import { fetchSongs as fetchSongsApi } from './api';
 import FullScreenPlayer from './components/FullScreenPlayer';
@@ -12,12 +8,9 @@ import MusicPlayer from './components/MusicPlayer';
 import Sidebar from './components/Sidebar';
 import SongCard from './components/SongCard';
 import useMusicStore from './musicStore';
-<<<<<<< HEAD
 import MusicBot from "./components/musicbot";
 import SearchTab from './components/SearchTab';
 import RefineSidebar from './components/RefineSidebar'; 
-=======
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
 
 const viewMeta = {
   home: ['Discover', ''],
@@ -39,7 +32,6 @@ const App = () => {
     currentSong,
     view,
     setView,
-<<<<<<< HEAD
     duration,
     genre,
     mood,
@@ -48,8 +40,6 @@ const App = () => {
     setGenre,
     setMood,
     setLanguage,
-=======
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
     likedSongs,
     searchQuery,
     hasMore,
@@ -58,10 +48,7 @@ const App = () => {
 
   const [showTopBtn, setShowTopBtn] = useState(false);
   const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-<<<<<<< HEAD
   const [isDesktopSidebarOpen, setDesktopSidebarOpen] = useState(true); 
-=======
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
   const [activePlaylist, setActivePlaylist] = useState(null);
   const [playlistSongs, setPlaylistSongs] = useState([]);
   const [isPlaylistLoading, setPlaylistLoading] = useState(false);
@@ -182,7 +169,6 @@ const App = () => {
   }
 
   return (
-<<<<<<< HEAD
     
 
     <div className="flex h-screen bg-black text-white overflow-hidden font-sans">
@@ -231,39 +217,6 @@ const App = () => {
           {isMobileSidebarOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
-=======
-    <div className="flex h-screen bg-black text-white overflow-hidden font-sans">
-      <Toaster position="top-center" reverseOrder={false} />
-
-      <div className="hidden md:block z-40">
-        <Sidebar />
-      </div>
-
-      {isMobileSidebarOpen && (
-        <div className="fixed inset-0 z-[70] md:hidden">
-          <button
-            aria-label="Close navigation"
-            className="absolute inset-0 bg-black/70"
-            onClick={() => setMobileSidebarOpen(false)}
-          />
-          <div className="relative w-72 max-w-[86vw] h-full">
-            <Sidebar onNavigate={() => setMobileSidebarOpen(false)} />
-          </div>
-        </div>
-      )}
-
-      <div className="flex-1 flex flex-col h-full relative md:pl-72 transition-all duration-300">
-        <div className="md:hidden px-4 py-3 flex items-center justify-between bg-black/80 backdrop-blur-md sticky top-0 z-30 border-b border-white/5">
-          <h1 className="text-lg font-bold text-white">VibeStream</h1>
-          <button
-            aria-label={isMobileSidebarOpen ? 'Close menu' : 'Open menu'}
-            onClick={() => setMobileSidebarOpen((open) => !open)}
-            className="p-2 text-zinc-300 hover:text-white"
-          >
-            {isMobileSidebarOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
 
         <main
           ref={mainRef}
@@ -271,7 +224,6 @@ const App = () => {
           className="flex-1 overflow-y-auto px-4 py-5 md:p-8 pb-32 custom-scrollbar relative scroll-smooth"
         >
           <header className="mb-6 md:mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-<<<<<<< HEAD
             <div className="flex items-center gap-4">
               {/* Desktop Sidebar Toggle Button */}
               <button
@@ -286,11 +238,6 @@ const App = () => {
                 <h1 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">{title}</h1>
                 {subtitle && <p className="text-zinc-400">{subtitle}</p>}
               </div>
-=======
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">{title}</h1>
-              {subtitle && <p className="text-zinc-400">{subtitle}</p>}
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
             </div>
 
             {(view !== 'home' || activePlaylist) && (
@@ -397,12 +344,8 @@ const App = () => {
             </div>
           )}
 
-<<<<<<< HEAD
 
           {view !== 'home' && view !== 'recommended' && view !== 'search' && (
-=======
-          {view !== 'home' && view !== 'recommended' && (
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
             <PlaylistSection
               title={title}
               subtitle={subtitle}
@@ -417,24 +360,14 @@ const App = () => {
             </div>
           )}
         </main>
-<<<<<<< HEAD
         
         
          
         <button onClick={scrollToTop} className={`absolute bottom-24 right-5 md:right-8 p-3 bg-emerald-500 text-black rounded-full shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all duration-300 z-40 ${showTopBtn ? 'opacity-100' : 'opacity-0'}`}>
-=======
-
-        <button
-          aria-label="Scroll to top"
-          onClick={scrollToTop}
-          className={`absolute bottom-24 right-5 md:right-8 p-3 bg-emerald-500 text-black rounded-full shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all duration-300 z-40 hover:scale-110 active:scale-95 ${showTopBtn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}
-        >
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
           <ArrowUp size={24} />
         </button>
 
         {currentSong && (
-<<<<<<< HEAD
           <div className="z-[105]">
             <MusicPlayer />
             <FullScreenPlayer />
@@ -479,16 +412,6 @@ const App = () => {
 )}
 </div>
 );
-=======
-          <>
-            <MusicPlayer />
-            <FullScreenPlayer />
-          </>
-        )}
-      </div>
-    </div>
-  );
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
 };
 
 const PlaylistSection = ({ title, subtitle, songs, onPlay, limit = 40 }) => (

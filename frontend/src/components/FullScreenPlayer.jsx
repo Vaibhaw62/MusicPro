@@ -1,9 +1,5 @@
 import React, { useMemo } from 'react';
-<<<<<<< HEAD
 import { X, Play, Pause, SkipBack, SkipForward, Heart, Info, ListMusic, Volume2, VolumeX, Repeat } from 'lucide-react';
-=======
-import { X, Play, Pause, SkipBack, SkipForward, Heart, Info, ListMusic, Volume2, VolumeX } from 'lucide-react';
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
 import useMusicStore from '../musicStore';
 
 const FullScreenPlayer = () => {
@@ -30,11 +26,8 @@ const FullScreenPlayer = () => {
     recommendations,
     view,
     setCurrentSong,
-<<<<<<< HEAD
     isRepeating,
     toggleRepeat,
-=======
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
   } = useMusicStore();
 
   const isLiked = currentSong && likedSongs.some((song) => String(song.id) === String(currentSong.id));
@@ -109,7 +102,6 @@ const FullScreenPlayer = () => {
                 {isPlaying ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="ml-1" />}
               </button>
               <button onClick={playNext} className="text-zinc-400 hover:text-white hover:scale-110 active:scale-95 transition-all"><SkipForward size={32} strokeWidth={1.5} /></button>
-<<<<<<< HEAD
               <button
                 onClick={toggleRepeat}
                 title="Repeat"
@@ -117,8 +109,6 @@ const FullScreenPlayer = () => {
               >
                 <Repeat size={24} strokeWidth={1.5} />
               </button>
-=======
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
             </div>
 
             <div className="flex justify-between items-center px-4 md:px-8 mt-4">

@@ -8,15 +8,10 @@ const initialState = {
   recommendations: [],
   recentlyPlayed: [],
   playEvents: [],
-<<<<<<< HEAD
   recentSearches: [],
   currentSong: null,
   isPlaying: false,
   isRepeating: false,
-=======
-  currentSong: null,
-  isPlaying: false,
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
   isLoading: false,
   isRecommendationsLoading: false,
   likedSongs: [],
@@ -83,7 +78,6 @@ const uniqueBySong = (songs) => {
   });
 };
 
-<<<<<<< HEAD
 const sanitizeSong = (song) => {
   // Extract any valid existing image field sent from the backend collection pipeline
   const fallbackArt = song?.album_art || song?.cover_url || song?.thumbnail_url || song?.cover || 'https://placehold.co/300';
@@ -97,16 +91,6 @@ const sanitizeSong = (song) => {
     album_art: fallbackArt,
   };
 };
-=======
-const sanitizeSong = (song) => ({
-  ...song,
-  id: songKey(song),
-  title: cleanDisplayTitle(song?.title),
-  artist: song?.artist || 'Unknown Artist',
-  description: song?.description || '',
-  album_art: song?.album_art || 'https://placehold.co/300',
-});
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
 
 const useMusicStore = create(
   persist(
@@ -176,7 +160,6 @@ const useMusicStore = create(
       },
 
       setView: (view) => set({ view }),
-<<<<<<< HEAD
       setSongs: (incomingSongs) => {
         set((state) => {
           const sanitized = incomingSongs.map(sanitizeSong);
@@ -189,14 +172,11 @@ const useMusicStore = create(
           };
         });
       },
-=======
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
       setCurrentTime: (time) => set({ currentTime: time }),
       seekTo: (time) => set({ currentTime: time, seekRequest: { time, issuedAt: Date.now() } }),
       clearSeekRequest: () => set({ seekRequest: null }),
       setPlayerOpen: (isOpen) => set({ isPlayerOpen: isOpen }),
 
-<<<<<<< HEAD
       setSearchQuery: (query, options = {}) => {
         set((state) => {
           // If query isn't empty, add it to the top of the list and keep only the last 10 unique searches
@@ -213,10 +193,6 @@ const useMusicStore = create(
             view: options.keepView ? state.view : 'home' 
           };
         });
-=======
-      setSearchQuery: (query) => {
-        set({ searchQuery: query, skip: 0, songs: [], hasMore: true, view: 'home' });
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
         get().fetchSongs();
       },
       setGenre: (genre) => {
@@ -308,12 +284,9 @@ const useMusicStore = create(
       },
 
       setCurrentSong: (rawSong) => {
-<<<<<<< HEAD
         console.log("========== STORE ==========");
         console.log("setCurrentSong called");
         console.log(rawSong);
-=======
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
         const song = sanitizeSong(rawSong);
         const previous = get().currentSong;
         const playedSeconds = get().currentTime || 0;
@@ -332,11 +305,8 @@ const useMusicStore = create(
 
         get().syncToCloud();
         get().fetchRecommendations();
-<<<<<<< HEAD
 
 
-=======
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
       },
 
       pauseSong: () => {
@@ -344,22 +314,16 @@ const useMusicStore = create(
         get().syncToCloud();
       },
       resumeSong: () => set({ isPlaying: true }),
-<<<<<<< HEAD
       toggleRepeat: () => set((state) => ({ isRepeating: !state.isRepeating })),
 
       // 1. ADDITIVE: Upgraded playNext with Infinite ML Radio
       playNext: async () => {
-=======
-
-      playNext: () => {
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
         const { currentSong, songs, likedSongs, recentlyPlayed, recommendations, view } = get();
         const activeList =
           view === 'liked' ? likedSongs
             : view === 'recent' ? recentlyPlayed
               : view === 'recommended' ? recommendations
                 : songs;
-<<<<<<< HEAD
         
         const index = activeList.findIndex((song) => songKey(song) === songKey(currentSong));
 
@@ -399,11 +363,6 @@ const useMusicStore = create(
           } catch (err) {
              console.error("Infinite ML Radio failed:", err);
           }
-=======
-        const index = activeList.findIndex((song) => songKey(song) === songKey(currentSong));
-        if (index !== -1 && index < activeList.length - 1) {
-          get().setCurrentSong(activeList[index + 1]);
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
         }
       },
 
@@ -456,17 +415,10 @@ const useMusicStore = create(
         playEvents: state.playEvents,
         volume: state.volume,
         selectedLanguage: state.selectedLanguage,
-<<<<<<< HEAD
         recentSearches: state.recentSearches,
-=======
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
       }),
     },
   ),
 );
 
-<<<<<<< HEAD
 export default useMusicStore;
-=======
-export default useMusicStore;
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219

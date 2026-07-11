@@ -8,10 +8,7 @@ import {
   LogOut,
   Music2,
   RotateCcw,
-<<<<<<< HEAD
-=======
   Search,
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
 } from 'lucide-react';
 import useMusicStore from '../musicStore';
 
@@ -24,11 +21,8 @@ const Sidebar = ({ onNavigate }) => {
     likedSongs,
     recentlyPlayed,
     recommendations,
-<<<<<<< HEAD
-=======
     searchQuery,
     setSearchQuery,
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
     selectedGenre,
     setGenre,
     selectedMood,
@@ -62,66 +56,36 @@ const Sidebar = ({ onNavigate }) => {
           <h1 className="text-xl font-bold text-white tracking-tight">VibeStream</h1>
         </div>
 
-<<<<<<< HEAD
-        <nav className="flex flex-col gap-1 px-2">
-          <NavItem
-            active={view === 'home'}
-            onClick={() => navigate('home')}
-            icon={<LayoutGrid size={18} />}
-=======
         <nav className="flex flex-col gap-2">
           <NavItem
             active={view === 'home'}
             onClick={() => navigate('home')}
             icon={<LayoutGrid size={20} />}
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
             label="Music Library"
           />
           <NavItem
             active={view === 'recommended'}
             onClick={() => navigate('recommended')}
-<<<<<<< HEAD
-            icon={<BrainCircuit size={18} />}
-=======
             icon={<BrainCircuit size={20} />}
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
             label="For You"
             badge={recommendations?.length || 0}
           />
           <NavItem
             active={view === 'recent'}
             onClick={() => navigate('recent')}
-<<<<<<< HEAD
-            icon={<Clock3 size={18} />}
-=======
             icon={<Clock3 size={20} />}
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
             label="Recent Plays"
             badge={recentlyPlayed?.length || 0}
           />
           <NavItem
             active={view === 'liked'}
             onClick={() => navigate('liked')}
-<<<<<<< HEAD
-            icon={<Heart size={18} fill={view === 'liked' ? 'currentColor' : 'none'} />}
-=======
             icon={<Heart size={20} fill={view === 'liked' ? 'currentColor' : 'none'} />}
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
             label="My Collection"
             badge={likedSongs?.length || 0}
           />
         </nav>
       </div>
-<<<<<<< HEAD
-    
-      
-
-      <div className="p-6 border-t border-white/5 mt-auto bg-black/40 backdrop-blur-md flex flex-col gap-3">
-        <div className="flex items-center justify-between px-2 mb-2">
-          <div className="mt-auto px-4 py-2 border-t border-white/5">
-            <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Logged in as:</p>
-            <p className="text-xs font-bold text-emerald-400 truncate">{user?.username}</p>
-=======
 
       <div className="flex-1 overflow-y-auto px-6 py-2 custom-scrollbar space-y-6">
         <div>
@@ -224,28 +188,12 @@ const Sidebar = ({ onNavigate }) => {
           <div className="flex flex-col min-w-0">
             <span className="text-[10px] uppercase text-zinc-500 font-bold">Logged in as</span>
             <span className="text-sm text-emerald-500 font-medium truncate max-w-[140px]">{user?.username}</span>
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
           </div>
           <button
             onClick={logout}
             className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
             title="Logout"
           >
-<<<<<<< HEAD
-            <LogOut size={16} />
-          </button>
-        </div>
-
-        {/* 🟢 RESET FILTERS (Placed immediately below user info) */}
-        <div className="p-3 border-t border-white/5">
-            <button 
-                onClick={resetFilters} 
-                className="w-full flex items-center justify-center gap-2 py-1.5 text-xs text-zinc-400 hover:text-white border border-dashed border-zinc-700 rounded-lg hover:border-zinc-500 transition-all"
-            >
-                <RotateCcw size={14} /> Reset Filters
-            </button>
-        </div>
-=======
             <LogOut size={18} />
           </button>
         </div>
@@ -257,7 +205,6 @@ const Sidebar = ({ onNavigate }) => {
           <RotateCcw size={14} />
           Reset Filters
         </button>
->>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
       </div>
     </aside>
   );
