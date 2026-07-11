@@ -1,0 +1,203 @@
+/* 1. Imports */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Urbanist:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+/* 2. Theme Configuration */
+@theme {
+  --font-sans: "Urbanist", sans-serif;
+  --font-heading: "Outfit", sans-serif;
+
+  --color-accent: rgb(71, 208, 208);
+  --color-dark: #070707;
+
+  --animate-spin-slow: spin 3s linear infinite;
+
+  /* MusicBot */
+  --animate-float: float 4s ease-in-out infinite;
+  --animate-wiggle: wiggle 0.8s ease-in-out;
+  --animate-glow: glowPulse 2.5s infinite;
+  --animate-thinking: thinkingPulse 1.5s infinite;
+}
+
+/* 3. Global Reset */
+:root {
+  --accent-color: rgb(71, 208, 208);
+  --bg-dark: #070707;
+}
+
+body {
+  background-color: var(--bg-dark);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(71, 208, 208, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.05) 0px, transparent 50%);
+  color: white;
+  font-family: 'Urbanist', sans-serif;
+  height: 100vh;
+  margin: 0;
+  overflow: hidden; /* Prevents whole-page bouncing on iOS */
+  
+  /* 📱 MOBILE OPTIMIZATION */
+  -webkit-tap-highlight-color: transparent; /* Removes blue box when tapping buttons */
+  overscroll-behavior-y: none; /* Prevents "pull-to-refresh" in browsers */
+  user-select: none; /* Optional: Prevents accidental text selection during touch */
+}
+
+/* 4. Glassmorphism Utilities */
+.glass-sidebar {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-player {
+  background: rgba(10, 10, 10, 0.75);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* 5. Custom Scrollbar */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+/* Hide scrollbar on mobile but keep scrolling working */
+@media (max-width: 768px) {
+  .custom-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-color);
+}
+
+/* 6. Mobile Height Fixes */
+/* Mobile browsers often have UI bars that mess up '100vh'. 
+   Using svh (small viewport height) is safer for mobile. */
+.h-screen-safe {
+  height: 100vh;
+  height: 100svh;
+}
+
+/* 7. Gradient Mask for Lyrics */
+.mask-image-gradient {
+  mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+}
+
+.line-clamp-2,
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.line-clamp-3 {
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+@keyframes wiggle {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(4deg);
+  }
+
+  50% {
+    transform: rotate(-4deg);
+  }
+
+  75% {
+    transform: rotate(2deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes glowPulse {
+  0% {
+    box-shadow:
+      0 0 8px rgba(34, 211, 238, 0.2),
+      0 0 20px rgba(34, 211, 238, 0.1);
+  }
+
+  50% {
+    box-shadow:
+      0 0 20px rgba(34, 211, 238, 0.5),
+      0 0 40px rgba(34, 211, 238, 0.3);
+  }
+
+  100% {
+    box-shadow:
+      0 0 8px rgba(34, 211, 238, 0.2),
+      0 0 20px rgba(34, 211, 238, 0.1);
+  }
+}
+
+@keyframes thinkingPulse {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+
+  50% {
+    transform: scale(1.04);
+    filter: brightness(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes listeningRing {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+
+  100% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+}
