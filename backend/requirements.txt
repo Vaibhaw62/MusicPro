@@ -13,9 +13,12 @@ youtube-search-python
 passlib[bcrypt]
 bcrypt
 pyjwt
+<<<<<<< HEAD
 requests
 numpy
 scikit-learn
 sentence-transformers
 torch
 faster-whisper
+=======
+>>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219

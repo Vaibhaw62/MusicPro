@@ -6,6 +6,7 @@
 @theme {
   --font-sans: "Urbanist", sans-serif;
   --font-heading: "Outfit", sans-serif;
+<<<<<<< HEAD
 
   --color-accent: rgb(71, 208, 208);
   --color-dark: #070707;
@@ -17,6 +18,11 @@
   --animate-wiggle: wiggle 0.8s ease-in-out;
   --animate-glow: glowPulse 2.5s infinite;
   --animate-thinking: thinkingPulse 1.5s infinite;
+=======
+  --color-accent: rgb(71, 208, 208);
+  --color-dark: #070707;
+  --animate-spin-slow: spin 3s linear infinite;
+>>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
 }
 
 /* 3. Global Reset */
@@ -117,6 +123,7 @@ body {
   -webkit-line-clamp: 3;
   line-clamp: 3;
 }
+<<<<<<< HEAD
 @keyframes float {
   0% {
     transform: translateY(0px);
@@ -201,3 +208,5 @@ body {
     opacity: 0;
   }
 }
+=======
+>>>>>>> e2c8a45711e2c9d705a49bd47bcff11024525219
