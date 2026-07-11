@@ -13,3 +13,9 @@ youtube-search-python
 passlib[bcrypt]
 bcrypt
 pyjwt
+requests
+numpy
+scikit-learn
+sentence-transformers
+torch
+faster-whisper

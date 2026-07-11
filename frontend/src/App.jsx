@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ArrowUp, Disc3, Menu, Music2, X } from 'lucide-react';
+import { ArrowLeft, ArrowUp, Disc3, Menu, Music2,Sparkles, X } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 import { fetchSongs as fetchSongsApi } from './api';
 import FullScreenPlayer from './components/FullScreenPlayer';
@@ -8,6 +8,9 @@ import MusicPlayer from './components/MusicPlayer';
 import Sidebar from './components/Sidebar';
 import SongCard from './components/SongCard';
 import useMusicStore from './musicStore';
+import MusicBot from "./components/musicbot";
+import SearchTab from './components/SearchTab';
+import RefineSidebar from './components/RefineSidebar'; 
 
 const viewMeta = {
   home: ['Discover', ''],
@@ -29,6 +32,14 @@ const App = () => {
     currentSong,
     view,
     setView,
+    duration,
+    genre,
+    mood,
+    language,
+    setDuration,
+    setGenre,
+    setMood,
+    setLanguage,
     likedSongs,
     searchQuery,
     hasMore,
@@ -37,6 +48,7 @@ const App = () => {
 
   const [showTopBtn, setShowTopBtn] = useState(false);
   const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [isDesktopSidebarOpen, setDesktopSidebarOpen] = useState(true); 
   const [activePlaylist, setActivePlaylist] = useState(null);
   const [playlistSongs, setPlaylistSongs] = useState([]);
   const [isPlaylistLoading, setPlaylistLoading] = useState(false);
@@ -157,37 +169,54 @@ const App = () => {
   }
 
   return (
+    
+
     <div className="flex h-screen bg-black text-white overflow-hidden font-sans">
-      <Toaster position="top-center" reverseOrder={false} />
+    <Toaster position="top-center" reverseOrder={false} />
 
-      <div className="hidden md:block z-40">
+    {/* 1. Desktop Sidebar Wrapper */}
+    <div className={`hidden md:block z-40 fixed h-full transition-all duration-300 w-72 ${isDesktopSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      {view === 'search' ? (
+        <RefineSidebar 
+          handleFilterChange={(setter, val) => setter(val)} 
+          setGenre={setGenre}
+          setLanguage={setLanguage}
+          setDuration={setDuration}
+          setMood={setMood}
+          selectedGenre={genre}
+          selectedLanguage={language}
+          selectedDuration={duration}
+          selectedMood={mood}
+          resetFilters={() => {
+            setGenre('all');
+            setLanguage('all');
+            setDuration('all');
+            setMood('all');
+          }}
+        />
+      ) : (
         <Sidebar />
-      </div>
-
-      {isMobileSidebarOpen && (
-        <div className="fixed inset-0 z-[70] md:hidden">
-          <button
-            aria-label="Close navigation"
-            className="absolute inset-0 bg-black/70"
-            onClick={() => setMobileSidebarOpen(false)}
-          />
-          <div className="relative w-72 max-w-[86vw] h-full">
-            <Sidebar onNavigate={() => setMobileSidebarOpen(false)} />
-          </div>
-        </div>
       )}
+    </div>
 
-      <div className="flex-1 flex flex-col h-full relative md:pl-72 transition-all duration-300">
-        <div className="md:hidden px-4 py-3 flex items-center justify-between bg-black/80 backdrop-blur-md sticky top-0 z-30 border-b border-white/5">
-          <h1 className="text-lg font-bold text-white">VibeStream</h1>
-          <button
-            aria-label={isMobileSidebarOpen ? 'Close menu' : 'Open menu'}
-            onClick={() => setMobileSidebarOpen((open) => !open)}
-            className="p-2 text-zinc-300 hover:text-white"
-          >
-            {isMobileSidebarOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+    {/* 2. Mobile Sidebar */}
+    {isMobileSidebarOpen && (
+      <div className="fixed inset-0 z-[70] md:hidden">
+        <button className="absolute inset-0 bg-black/70" onClick={() => setMobileSidebarOpen(false)} />
+        <div className="relative w-72 max-w-[86vw] h-full">
+          <Sidebar onNavigate={() => setMobileSidebarOpen(false)} />
         </div>
+      </div>
+    )}
+
+    {/* 3. Main Content Wrapper */}
+    <div className={`flex-1 flex flex-col h-full relative transition-all duration-300 ${isDesktopSidebarOpen ? 'md:pl-72' : 'md:pl-0'}`}> 
+      <div className="md:hidden px-4 py-3 flex items-center justify-between bg-black/80 backdrop-blur-md sticky top-0 z-30 border-b border-white/5">
+        <h1 className="text-lg font-bold text-white">VibeStream</h1>
+        <button onClick={() => setMobileSidebarOpen((open) => !open)} className="p-2 text-zinc-300 hover:text-white">
+          {isMobileSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
 
         <main
           ref={mainRef}
@@ -195,9 +224,20 @@ const App = () => {
           className="flex-1 overflow-y-auto px-4 py-5 md:p-8 pb-32 custom-scrollbar relative scroll-smooth"
         >
           <header className="mb-6 md:mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">{title}</h1>
-              {subtitle && <p className="text-zinc-400">{subtitle}</p>}
+            <div className="flex items-center gap-4">
+              {/* Desktop Sidebar Toggle Button */}
+              <button
+                onClick={() => setDesktopSidebarOpen(!isDesktopSidebarOpen)}
+                className="hidden md:flex p-2 text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full transition-all"
+                title={isDesktopSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
+              >
+                <Menu size={20} />
+              </button>
+              
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">{title}</h1>
+                {subtitle && <p className="text-zinc-400">{subtitle}</p>}
+              </div>
             </div>
 
             {(view !== 'home' || activePlaylist) && (
@@ -304,7 +344,8 @@ const App = () => {
             </div>
           )}
 
-          {view !== 'home' && view !== 'recommended' && (
+
+          {view !== 'home' && view !== 'recommended' && view !== 'search' && (
             <PlaylistSection
               title={title}
               subtitle={subtitle}
@@ -319,24 +360,58 @@ const App = () => {
             </div>
           )}
         </main>
-
-        <button
-          aria-label="Scroll to top"
-          onClick={scrollToTop}
-          className={`absolute bottom-24 right-5 md:right-8 p-3 bg-emerald-500 text-black rounded-full shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all duration-300 z-40 hover:scale-110 active:scale-95 ${showTopBtn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}
-        >
+        
+        
+         
+        <button onClick={scrollToTop} className={`absolute bottom-24 right-5 md:right-8 p-3 bg-emerald-500 text-black rounded-full shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all duration-300 z-40 ${showTopBtn ? 'opacity-100' : 'opacity-0'}`}>
           <ArrowUp size={24} />
         </button>
 
         {currentSong && (
-          <>
+          <div className="z-[105]">
             <MusicPlayer />
             <FullScreenPlayer />
-          </>
+          </div>
         )}
+        <MusicBot />
+
+        {/* ADDITIVE: YouTube Music Style Bottom Navigation (Mobile) */}
+        <div className="fixed bottom-0 left-0 w-full bg-black/95 backdrop-blur-xl border-t border-white/10 flex justify-around items-center p-2 z-[70] pb-safe">
+            <button 
+                onClick={() => setView('home')} 
+                className={`flex flex-col items-center gap-1 p-2 transition-colors ${view === 'home' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill={view === 'home' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                <span className="text-[10px] font-medium">Home</span>
+            </button>
+
+            <button 
+                onClick={() => setView('vibe_ai')} 
+                className={`flex flex-col items-center gap-1 p-2 transition-colors ${view === 'vibe_ai' ? 'text-emerald-400' : 'text-zinc-500 hover:text-zinc-300'}`}
+            >
+                <Sparkles size={22} fill={view === 'vibe_ai' ? 'currentColor' : 'none'} />
+                <span className="text-[10px] font-medium">Vibe AI</span>
+            </button>
+
+            <button 
+                onClick={() => setView('search')} 
+                className={`flex flex-col items-center gap-1 p-2 transition-colors ${view === 'search' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <span className="text-[10px] font-medium">Search</span>
+            </button>
+        </div>
+
       </div>
-    </div>
-  );
+
+{/* 4. Search Tab Overlay (Properly nested inside the main container) */}
+{view === 'search' && (
+  <div className="fixed inset-0 z-[100] bg-black">
+    <SearchTab />
+  </div>
+)}
+</div>
+);
 };
 
 const PlaylistSection = ({ title, subtitle, songs, onPlay, limit = 40 }) => (

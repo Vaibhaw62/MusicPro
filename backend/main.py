@@ -14,19 +14,52 @@ import jwt
 import httpx
 from bot_manager import BotManager
 from dotenv import load_dotenv
+load_dotenv()
 from fastapi import Depends, FastAPI, Header, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+
+
 from fastapi.responses import StreamingResponse
 from fastapi.security import OAuth2PasswordBearer
 from motor.motor_asyncio import AsyncIOMotorClient
 from passlib.context import CryptContext
 from pydantic import BaseModel
+from routes.bot_router import router as bot_router
+from routes.voice_router import router as voice_router
+from ml.semantic_search import semantic_engine
+from ml.mood_engine import mood_engine
+from ml.recommender import recommendation_engine
+from ml.explainability import explainability_engine
+from ml.anomaly_detector import anomaly_detector
+from routes.tts_router import router as tts_router
+from fastapi import APIRouter
+from ml.llm_service import llm_service 
+router = APIRouter()
+
+
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+# Silence noisy third-party libraries
+logging.getLogger("pymongo").setLevel(logging.WARNING)
+logging.getLogger("pymongo.topology").setLevel(logging.WARNING)
+logging.getLogger("pymongo.serverSelection").setLevel(logging.WARNING)
+
+logging.getLogger("motor").setLevel(logging.WARNING)
+
+logging.getLogger("telethon").setLevel(logging.WARNING)
+logging.getLogger("telethon.network").setLevel(logging.WARNING)
+
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
+logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
+logging.getLogger("transformers").setLevel(logging.ERROR)
+
+logging.getLogger("torch").setLevel(logging.ERROR)
 load_dotenv()
 
 SECRET_KEY = os.getenv("JWT_SECRET")
@@ -75,17 +108,66 @@ class UserStateSync(BaseModel):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("System init: starting FastAPI")
+    print("STEP 1: Lifespan started")
+    
+    # Ensure indexes in MongoDB
     await ensure_indexes()
+    print("STEP 2: Mongo indexes ensured")
+    logger.info("System init: starting FastAPI")
+
+    # Helper function to normalize song data
+    def as_list(val):
+        if isinstance(val, list): return val
+        if not val: return []
+        return [str(val)]
+
+    try:
+        # Fetch raw data
+        raw_songs = await db.master_library.find({"is_hidden": {"$ne": True}}).to_list(length=100000)
+        print(f"STEP 3: Loaded {len(raw_songs)} songs from DB")
+
+        normalized_songs = []
+        for song in raw_songs:
+            # Elite Fix: Use your existing normalize_song function so the 
+            # AI engines actually store the album_art and msg_id (audio link)!
+            normalized_songs.append(normalize_song(song))
+
+        # Build Engines
+        if normalized_songs:
+            print("STEP 4: Building indexes...")
+            
+            semantic_engine.build_index(normalized_songs)
+            print("STEP 4.1: Semantic index built")
+            
+            mood_engine.build_index(normalized_songs)
+            print("STEP 6: Mood index built")
+            
+            recommendation_engine.build_index(normalized_songs)
+            print("STEP 8: Recommendation index built")
+            
+            anomaly_detector.build_index(normalized_songs)
+            print("STEP 10: Anomaly engine ready")
+            
+            logger.info(f"AI Engines initialized with {len(normalized_songs)} songs.")
+        else:
+            logger.warning("No songs found. ML indexes skipped.")
+
+    except Exception as exc:
+        logger.error("Failed to build ML indexes: %s", exc)
+        print(f"STEP 11: Failed to build indexes: {exc}")
+
+    # Start Background Bot Task
     bot_task = asyncio.create_task(manager.start())
+    print("STEP 12: Bot task started")
 
-    yield
+    yield  # Application running
 
+    # Cleanup on shutdown
     logger.info("System shutdown: disconnecting Telegram workers")
     bot_task.cancel()
     try:
         for worker in manager.workers:
-            if worker.client and worker.client.is_connected():
+            if hasattr(worker, 'client') and worker.client and worker.client.is_connected():
                 await worker.client.disconnect()
     except Exception as exc:
         logger.error("Error during shutdown cleanup: %s", exc)
@@ -759,6 +841,11 @@ async def stream_song(msg_id: int, range: Optional[str] = Header(None)):
     except Exception:
         stream_semaphore.release()
         raise
+
+
+app.include_router(bot_router)
+app.include_router(voice_router)
+app.include_router(tts_router)
 
 
 if __name__ == "__main__":

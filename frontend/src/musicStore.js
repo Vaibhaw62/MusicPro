@@ -8,8 +8,10 @@ const initialState = {
   recommendations: [],
   recentlyPlayed: [],
   playEvents: [],
+  recentSearches: [],
   currentSong: null,
   isPlaying: false,
+  isRepeating: false,
   isLoading: false,
   isRecommendationsLoading: false,
   likedSongs: [],
@@ -76,14 +78,19 @@ const uniqueBySong = (songs) => {
   });
 };
 
-const sanitizeSong = (song) => ({
-  ...song,
-  id: songKey(song),
-  title: cleanDisplayTitle(song?.title),
-  artist: song?.artist || 'Unknown Artist',
-  description: song?.description || '',
-  album_art: song?.album_art || 'https://placehold.co/300',
-});
+const sanitizeSong = (song) => {
+  // Extract any valid existing image field sent from the backend collection pipeline
+  const fallbackArt = song?.album_art || song?.cover_url || song?.thumbnail_url || song?.cover || 'https://placehold.co/300';
+  
+  return {
+    ...song,
+    id: songKey(song),
+    title: cleanDisplayTitle(song?.title),
+    artist: song?.artist || 'Unknown Artist',
+    description: song?.description || '',
+    album_art: fallbackArt,
+  };
+};
 
 const useMusicStore = create(
   persist(
@@ -153,13 +160,39 @@ const useMusicStore = create(
       },
 
       setView: (view) => set({ view }),
+      setSongs: (incomingSongs) => {
+        set((state) => {
+          const sanitized = incomingSongs.map(sanitizeSong);
+          // ELITE FIX: Prepend the AI recommendations to the top of the library.
+          // This keeps the 50+ background songs alive, so the Home Page images never turn into placeholders!
+          const merged = uniqueBySong([...sanitized, ...state.songs]);
+          return {
+            songs: merged,
+            view: 'home', 
+          };
+        });
+      },
       setCurrentTime: (time) => set({ currentTime: time }),
       seekTo: (time) => set({ currentTime: time, seekRequest: { time, issuedAt: Date.now() } }),
       clearSeekRequest: () => set({ seekRequest: null }),
       setPlayerOpen: (isOpen) => set({ isPlayerOpen: isOpen }),
 
-      setSearchQuery: (query) => {
-        set({ searchQuery: query, skip: 0, songs: [], hasMore: true, view: 'home' });
+      setSearchQuery: (query, options = {}) => {
+        set((state) => {
+          // If query isn't empty, add it to the top of the list and keep only the last 10 unique searches
+          const updatedSearches = query.trim() 
+            ? [query.trim(), ...state.recentSearches.filter(s => s !== query.trim())].slice(0, 10)
+            : state.recentSearches;
+            
+          return { 
+            searchQuery: query, 
+            recentSearches: updatedSearches, 
+            skip: 0, 
+            songs: [], 
+            hasMore: true, 
+            view: options.keepView ? state.view : 'home' 
+          };
+        });
         get().fetchSongs();
       },
       setGenre: (genre) => {
@@ -251,6 +284,9 @@ const useMusicStore = create(
       },
 
       setCurrentSong: (rawSong) => {
+        console.log("========== STORE ==========");
+        console.log("setCurrentSong called");
+        console.log(rawSong);
         const song = sanitizeSong(rawSong);
         const previous = get().currentSong;
         const playedSeconds = get().currentTime || 0;
@@ -269,6 +305,8 @@ const useMusicStore = create(
 
         get().syncToCloud();
         get().fetchRecommendations();
+
+
       },
 
       pauseSong: () => {
@@ -276,17 +314,55 @@ const useMusicStore = create(
         get().syncToCloud();
       },
       resumeSong: () => set({ isPlaying: true }),
+      toggleRepeat: () => set((state) => ({ isRepeating: !state.isRepeating })),
 
-      playNext: () => {
+      // 1. ADDITIVE: Upgraded playNext with Infinite ML Radio
+      playNext: async () => {
         const { currentSong, songs, likedSongs, recentlyPlayed, recommendations, view } = get();
         const activeList =
           view === 'liked' ? likedSongs
             : view === 'recent' ? recentlyPlayed
               : view === 'recommended' ? recommendations
                 : songs;
+        
         const index = activeList.findIndex((song) => songKey(song) === songKey(currentSong));
+
+        // If there is a next song in the current list, play it
         if (index !== -1 && index < activeList.length - 1) {
           get().setCurrentSong(activeList[index + 1]);
+        } 
+        // IF WE REACH THE END OF THE LIST -> Trigger Infinite ML Radio
+        else if (currentSong) {
+          try {
+            console.log("Playlist ended. Fetching similar songs via Vibe AI ML...");
+            
+            // Strictly enforce the same language in the semantic query
+            const langFilter = currentSong.language && currentSong.language !== 'all' 
+              ? ` in ${currentSong.language} language` 
+              : '';
+              
+            const aiQuery = `Songs similar to ${currentSong.title} by ${currentSong.artist}${langFilter}`;
+            
+            const res = await axios.post(`${API_URL}/bot/semantic-search`, { 
+              query: aiQuery, 
+              limit: 15 // Fetch plenty of continuous songs
+            });
+
+            if (res.data?.results?.length > 0) {
+               // Sanitize and filter out the song we just played
+               const newSongs = res.data.results
+                  .map(sanitizeSong)
+                  .filter(s => songKey(s) !== songKey(currentSong));
+               
+               if (newSongs.length > 0) {
+                   // Append the new AI suggestions to the global songs list and play the first one
+                   set({ songs: [...songs, ...newSongs] });
+                   get().setCurrentSong(newSongs[0]);
+               }
+            }
+          } catch (err) {
+             console.error("Infinite ML Radio failed:", err);
+          }
         }
       },
 
@@ -339,6 +415,7 @@ const useMusicStore = create(
         playEvents: state.playEvents,
         volume: state.volume,
         selectedLanguage: state.selectedLanguage,
+        recentSearches: state.recentSearches,
       }),
     },
   ),
