@@ -1,6 +1,6 @@
 // File: src/components/SearchTab.jsx
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { ArrowLeft, Mic, Clock, Play, X } from 'lucide-react';
+import { ArrowLeft, Mic, Clock, Play, X, SlidersHorizontal } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useMusicStore from '../musicStore';
 import voiceRecorder from '../services/voiceRecorder';
@@ -29,6 +29,8 @@ const SearchTab = () => {
 
   const [hasSearched, setHasSearched] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  // FIX: filters are hidden by default on mobile now, toggled via a button
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const handleFilterChange = (setter, value) => {
     setter(value);
@@ -37,6 +39,7 @@ const SearchTab = () => {
   const handleFilterSearch = () => {
     setSearchQuery(localQuery, { keepView: true });
     setHasSearched(true);
+    setShowMobileFilters(false);
   };
 
   const recordingTimeoutRef = useRef(null);
@@ -140,29 +143,46 @@ const SearchTab = () => {
     <div className="flex h-full w-full bg-black text-white overflow-hidden">
       
       {/* 1. LEFT SIDEBAR: Refine Controls (reused, store-connected) */}
-      <RefineSidebar
-        handleFilterChange={handleFilterChange}
-        setGenre={setGenre}
-        setLanguage={setLanguage}
-        setDuration={setDuration}
-        setMood={setMood}
-        selectedGenre={selectedGenre}
-        selectedLanguage={selectedLanguage}
-        selectedDuration={selectedDuration}
-        selectedMood={selectedMood}
-        resetFilters={resetFilters}
-        onSearch={handleFilterSearch}
-      />
+      {/* FIX: hidden by default on mobile (hidden), always visible on md+ screens.
+          On mobile it now renders as an overlay drawer toggled by the Filters button. */}
+      <div className={`
+        ${showMobileFilters ? 'flex' : 'hidden'} md:flex
+        fixed md:static inset-0 z-[80] md:z-auto
+        bg-black/95 md:bg-transparent
+      `}>
+        <RefineSidebar
+          handleFilterChange={handleFilterChange}
+          setGenre={setGenre}
+          setLanguage={setLanguage}
+          setDuration={setDuration}
+          setMood={setMood}
+          selectedGenre={selectedGenre}
+          selectedLanguage={selectedLanguage}
+          selectedDuration={selectedDuration}
+          selectedMood={selectedMood}
+          resetFilters={resetFilters}
+          onSearch={handleFilterSearch}
+        />
+        {/* Tap outside the drawer (on mobile) to close it */}
+        <button
+          className="flex-1 md:hidden"
+          aria-label="Close filters"
+          onClick={() => setShowMobileFilters(false)}
+        />
+      </div>
   
       {/* 2. RIGHT SIDE: Main Content */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
+      {/* FIX: min-w-0 is the critical fix — without it, this flex child refuses
+          to shrink below its content's natural width and gets pushed off-screen
+          on narrow viewports, which is why only the filter sidebar was visible. */}
+      <div className="flex-1 min-w-0 flex flex-col h-full overflow-hidden">
 
         {/* FIXED HEADER: Search Bar + Tabs — never scrolls, always visible */}
-        <div className="flex-shrink-0 bg-black px-6 pt-4">
+        <div className="flex-shrink-0 bg-black px-4 md:px-6 pt-4">
           {/* Top Search Bar */}
-          <div className="flex items-center gap-3 mb-4">
-            <button onClick={() => setView('home')} className="p-2 text-zinc-400 hover:text-white"><ArrowLeft size={24} /></button>
-            <div className="flex-1 relative flex items-center bg-zinc-900 rounded-full px-4 py-2 border border-white/10 focus-within:border-zinc-500 transition-colors">
+          <div className="flex items-center gap-2 md:gap-3 mb-4">
+            <button onClick={() => setView('home')} className="p-2 text-zinc-400 hover:text-white shrink-0"><ArrowLeft size={24} /></button>
+            <div className="flex-1 min-w-0 relative flex items-center bg-zinc-900 rounded-full px-4 py-2 border border-white/10 focus-within:border-zinc-500 transition-colors">
               <input
                 type="text"
                 value={localQuery}
@@ -188,6 +208,14 @@ const SearchTab = () => {
                 <Mic size={16} />
               </button>
             </div>
+            {/* FIX: mobile-only Filters toggle button, since the sidebar is now hidden by default on mobile */}
+            <button
+              onClick={() => setShowMobileFilters(true)}
+              className="md:hidden p-2 shrink-0 text-zinc-400 hover:text-white bg-zinc-900 border border-white/10 rounded-full"
+              title="Filters"
+            >
+              <SlidersHorizontal size={18} />
+            </button>
           </div>
 
           {/* Tabs Row */}
@@ -207,7 +235,7 @@ const SearchTab = () => {
         </div>
 
         {/* SCROLLABLE: Search Results / History Area — scrolls beneath the fixed header */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar px-6 pb-32">
+        <div className="flex-1 overflow-y-auto custom-scrollbar px-4 md:px-6 pb-32">
           {!localQuery.trim() && !hasSearched ? (
             <div>
               <h3 className="text-zinc-400 text-sm font-medium mb-4">Recent searches</h3>

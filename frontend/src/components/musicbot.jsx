@@ -217,6 +217,7 @@ function MusicBot() {
 
 
   const isVibePage = view === 'vibe_ai';
+  const [showMobileStats, setShowMobileStats] = useState(false); // FIX: mobile toggle for stats/actions panel
 
   //const [isOpen, setIsOpen] = useState(false);
 
@@ -1800,7 +1801,20 @@ return (
           {/* =========================
                LEFT SIDEBAR
              ========================= */}
-          <div className="hidden md:flex w-64 border-r border-white/10 flex-col p-4 gap-6 bg-zinc-950 overflow-y-auto custom-scrollbar">
+          {/* FIX: was `hidden md:flex` (fully inaccessible on mobile). Now renders as a full-screen overlay drawer on mobile, toggled via the new header button below, and stays exactly as before (static flex column) on md+ screens. */}
+          <div className={`
+            ${showMobileStats ? 'flex' : 'hidden'} md:flex
+            fixed md:static inset-0 z-[90] md:z-auto
+            w-full md:w-64 border-r border-white/10 flex-col p-4 gap-6 bg-zinc-950 overflow-y-auto custom-scrollbar
+          `}>
+            {/* Mobile-only close button for the drawer */}
+            <button
+              onClick={() => setShowMobileStats(false)}
+              className="md:hidden self-end p-2 text-zinc-400 hover:text-white"
+              aria-label="Close"
+            >
+              <X size={20} />
+            </button>
 
             {/* HEADER */}
             <div className="flex flex-col items-center pt-4 pb-2 text-center">
@@ -1828,7 +1842,7 @@ return (
                 return (
                   <button
                     key={action.id}
-                    onClick={() => handleQuickAction(action.id)}
+                    onClick={() => { handleQuickAction(action.id); setShowMobileStats(false); }}
                     className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm bg-white/5 hover:bg-emerald-500/20 border border-white/5 transition-all"
                   >
                     <Icon size={16} />
@@ -1862,15 +1876,23 @@ return (
               <X size={20} />
             </button>
 
-            {/* MOBILE-ONLY HEADER (sidebar is hidden below md) */}
+            {/* MOBILE-ONLY HEADER (sidebar now opens as a drawer below md, via the new button) */}
             <div className="md:hidden px-6 py-5 border-b border-white/10 bg-white/[0.02] flex items-center gap-4">
               <PandaAvatar state={botState} size={56} showStatus />
-              <div>
+              <div className="flex-1 min-w-0">
                 <h2 className="text-lg font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400">
                   Vibe AI
                 </h2>
                 <p className="text-xs text-zinc-400">Your intelligent music companion</p>
               </div>
+              {/* FIX: opens the stats/quick-actions/taste-profile drawer that used to be desktop-only */}
+              <button
+                onClick={() => setShowMobileStats(true)}
+                className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-zinc-300"
+                aria-label="Stats and quick actions"
+              >
+                <Sparkles size={18} />
+              </button>
             </div>
 
             {/* =========================
