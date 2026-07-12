@@ -72,6 +72,34 @@ class VoiceRecorder {
 
     //----------------------------------------------------------
 
+    // FIX: Releases the microphone hardware. Without this, the mic stream
+    // opened by initialize() stays live forever (browser keeps the mic
+    // indicator on / mic stays hot) because MediaRecorder.stop() only
+    // stops the recorder, not the underlying getUserMedia() stream.
+    releaseStream() {
+
+        if (this.stream) {
+
+            this.stream.getTracks().forEach((track) => {
+
+                track.stop();
+
+            });
+
+            this.stream = null;
+
+            console.log(
+
+                "🎤 Microphone released"
+
+            );
+
+        }
+
+    }
+
+    //----------------------------------------------------------
+
     isRecording() {
 
         return this.recording;
@@ -261,6 +289,10 @@ class VoiceRecorder {
                     );
 
                     this.recording = false;
+
+                    // FIX: release the mic hardware now that recording
+                    // has fully stopped, instead of leaving it open.
+                    this.releaseStream();
 
                     console.log(
 
