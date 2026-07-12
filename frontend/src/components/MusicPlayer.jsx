@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Maximize2, Heart, ChevronUp } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Maximize2, Heart, ChevronUp, Repeat } from 'lucide-react';
 import useMusicStore from '../musicStore';
 import { getStreamUrl } from '../api';
 
@@ -9,7 +9,8 @@ const MusicPlayer = () => {
     likedSongs, playNext, playPrev, currentTime, setCurrentTime,
     seekRequest, seekTo, clearSeekRequest,
     setPlayerOpen, isPlayerOpen,
-    volume, isMuted, setVolume, toggleMute
+    volume, isMuted, setVolume, toggleMute,
+    isRepeating, toggleRepeat
   } = useMusicStore();
 
   const audioRef = useRef(null);
@@ -18,8 +19,16 @@ const MusicPlayer = () => {
 
   // --- AUDIO ENGINE ---
   useEffect(() => {
+
+    console.log("===== PLAYER EFFECT =====");
+    console.log("currentSong =", currentSong);
+    console.log("isPlaying =", isPlaying);
     if (currentSong && audioRef.current) {
       const url = getStreamUrl(currentSong.msg_id);
+      console.log(
+        "STREAM URL",
+        url
+      ); 
 
       // 🟢 SYNC FIX: If reloading page, sync audio time to stored time
       const isNewSource = audioRef.current.src !== url;
@@ -31,10 +40,12 @@ const MusicPlayer = () => {
         // Restore time if we have one saved (and it's a resume)
         if (isPlaying) audioRef.current.play().catch(() => { });
       } else if (isPlaying) {
+        console.log("Calling audio.play()");
         audioRef.current.play().catch(() => { });
+        console.log("Calling audio.play()");
       } else {
         audioRef.current.pause();
-      }
+      } 
     }
   }, [currentSong, isPlaying]);
 
@@ -86,20 +97,26 @@ const MusicPlayer = () => {
     <>
       <audio
         ref={audioRef}
+        loop={isRepeating}
         onEnded={playNext}
         onTimeUpdate={handleTimeUpdate}
         preload="metadata"
       />
 
       {/* PLAYER BAR */}
-      <div className={`fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-white/10 transition-transform duration-300 z-50 ${isPlayerOpen ? 'translate-y-full' : 'translate-y-0'}`}>
-        <div className="max-w-screen-2xl mx-auto px-4 h-20 flex items-center justify-between gap-4">
-
+{/* PLAYER BAR */}
+      <div className={`fixed bottom-16 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-white/10 transition-transform duration-300 z-50 ${isPlayerOpen ? 'translate-y-full' : 'translate-y-0'}`}>        <div className="max-w-screen-2xl mx-auto px-4 h-20 flex items-center justify-between gap-4">
           {/* 1. Song Info */}
           <div className="flex items-center gap-4 w-[30%] min-w-[140px]">
             <div className="relative group cursor-pointer" onClick={() => setPlayerOpen(true)}>
               <img
-                src={currentSong.album_art || "https://placehold.co/300"}
+                src={
+                    currentSong.album_art ||
+                    currentSong.cover_url ||
+                    currentSong.thumbnail_url ||
+                    currentSong.cover ||
+                    "https://placehold.co/300"
+                    }
                 alt={currentSong.title}
                 className="w-12 h-12 rounded-md object-cover shadow-lg group-hover:opacity-80 transition-opacity"
               />
@@ -127,6 +144,13 @@ const MusicPlayer = () => {
                 {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-0.5" />}
               </button>
               <button onClick={playNext} className="text-zinc-400 hover:text-white transition-colors"><SkipForward size={20} /></button>
+              <button
+                onClick={toggleRepeat}
+                title="Repeat"
+                className={`transition-colors ${isRepeating ? 'text-emerald-500' : 'text-zinc-400 hover:text-white'}`}
+              >
+                <Repeat size={18} />
+              </button>
             </div>
 
             {/* PROGRESS BAR */}
