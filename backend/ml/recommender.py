@@ -69,7 +69,12 @@ class RecommendationEngine:
             ] += 3
 
         return counter
-
+    
+    
+    def build_index(self, songs):
+        print(f"[DEBUG] build_index called with {len(songs)} songs")
+        self.songs = songs
+    
     # =====================================
     # BUILD INDEX
     # =====================================
@@ -206,7 +211,7 @@ class RecommendationEngine:
             song = self.songs[idx].copy() 
             song["mood_score"] = float(similarities[idx])
             results.append(song)
-
+        return results[:limit]
     # =====================================
     # DAILY MIX
     # =====================================
