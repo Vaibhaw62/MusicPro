@@ -16,6 +16,4 @@ pyjwt
 requests
 numpy
 scikit-learn
-sentence-transformers
-torch
-faster-whisper
+
