@@ -195,6 +195,7 @@ app.add_middleware(
         "https://vibestream.onrender.com",
         "https://musicpro-jbap.onrender.com",
         "https://music-app-backend-twia.onrender.com",
+        "https://music-pro-rho.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],

@@ -3,7 +3,7 @@ import useMusicStore from './musicStore'; // 🟢 Added to handle auto-logout
 
 // 🟢 LOGIC: Environment-aware URL switching
 export const API_URL = import.meta.env.PROD 
-  ? 'https://music-app-backend-twia.onrender.com' 
+  ? "https://vibestream2.duckdns.org" 
   : (import.meta.env.VITE_API_URL || 'http://localhost:8007');
 
 export const api = axios.create({
