@@ -1,19 +1,23 @@
-﻿fastapi
-httpx
+﻿--extra-index-url https://pytorch.org
+torch==2.13.0
+faster-whisper==1.2.1
+sentence-transformers==3.0.1
+fastapi
+starlette
 uvicorn
+httpx
+requests
 motor
 pymongo
-python-dotenv
-Telethon
 pydantic
 python-multipart
-starlette
+python-dotenv
+Telethon==1.36.0
 yt-dlp
-youtube-search-python
+youtube-search-python==1.6.6
 passlib[bcrypt]
 bcrypt
 pyjwt
-requests
 numpy
 scikit-learn
 
