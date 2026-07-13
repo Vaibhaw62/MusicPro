@@ -442,42 +442,7 @@ function MusicBot() {
     }
   }, []); 
 
-  // Change the dependency from (botState !== BOT_STATES.IDLE) to just botState
-  useWakeWord(() => {
-      console.log("Wake word detected!");
-      
-      const fetchWakeWordGreeting = async () => {
-          try {
-              const res = await api.post("/bot/dynamic-greeting", {
-                  username: user?.username || "Friend"
-              });
-              const aiGreeting = res.data.greeting;
-              
-              await speakText(aiGreeting, "en");
-          } catch (err) {
-              console.error("Wake word flow error:", err);
-              // Fallback: speak a local greeting instead of staying silent
-              try {
-                  await ttsService.speak(getGreeting(user?.username));
-              } catch (ttsErr) {
-                  console.error("Wake word fallback TTS failed:", ttsErr);
-              }
-          }
-      };
-
-      fetchWakeWordGreeting(
-
-      );
-
-  }, botState !== BOT_STATES.IDLE || !isVibePage);
-  // FIX: wake-word mic listener was starting on EVERY page load, on every tab,
-  // because MusicBot renders unconditionally in App.jsx and botState defaults
-  // to IDLE on mount. It also restarted itself every time recognition timed out,
-  // which is what caused the repeating mic-access chime and blocked song playback
-  // site-wide. Now it only listens while the user is actually on the Vibe AI tab
-  // AND the bot is idle — never on Home, Search, or while a response is loading.
-
-  // ... rest of your component (return statement, etc)
+  
 
     const setEmotion = useCallback(
 
