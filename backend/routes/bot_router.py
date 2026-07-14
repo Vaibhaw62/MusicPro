@@ -2,7 +2,7 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import random, logging, traceback 
-import os,traceback,sys
+import os,traceback,sys,re 
 from ml.semantic_search import semantic_engine
 from ml.mood_engine import mood_engine
 from ml.recommender import recommendation_engine
@@ -85,6 +85,9 @@ class ContextRequest(BaseModel):
     last_songs: list = []
 
 
+class KeywordSearchRequest(BaseModel):
+    query: str
+    limit: int = 30
 
 
 
@@ -596,3 +599,45 @@ async def dynamic_greeting(payload: GreetingRequest):
     except Exception as exc:
         # Safe fallback
         return {"greeting": f"Hello {payload.username}, what would you like to hear?"}
+    
+@router.post("/search")
+async def keyword_search(payload: KeywordSearchRequest):
+
+    query = payload.query.strip()
+    if not query:
+        return {"results": [], "query": ""}
+
+    tokens = query.split()
+
+    and_conditions = []
+
+    for token in tokens:
+        token_escaped = re.escape(token)
+
+        or_clause = {
+            "$or": [
+                {"title": {"$regex": token_escaped, "$options": "i"}},
+                {"artist_name": {"$regex": token_escaped, "$options": "i"}},
+                {"artist": {"$regex": token_escaped, "$options": "i"}},
+                {"album": {"$regex": token_escaped, "$options": "i"}},
+                {"genre": {"$regex": token_escaped, "$options": "i"}},
+                {"moods": {"$regex": token_escaped, "$options": "i"}},
+            ]
+        }
+
+        # Purely numeric token (e.g. "1997") also matches year exactly
+        if token.isdigit():
+            or_clause["$or"].append({"year": int(token)})
+
+        and_conditions.append(or_clause)
+
+    mongo_query = {"$and": and_conditions} if and_conditions else {}
+
+    cursor = songs_collection.find(mongo_query).limit(payload.limit)
+    results = await cursor.to_list(length=payload.limit)
+
+    return {
+        "results": [serialize_song(s) for s in results],
+        "query": query,
+        "matched_tokens": tokens
+    }
