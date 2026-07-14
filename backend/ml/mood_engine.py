@@ -216,7 +216,7 @@ class MoodEngine:
 
     # If we've exhausted the fresh pool (user kept clicking), reset
     # and allow repeats again rather than returning nothing.
-    pool_to_sample = fresh_indices if fresh_indices else list(candidate_indices)
+        pool_to_sample = fresh_indices if fresh_indices else list(candidate_indices)
 
         chosen_indices = random.sample(
             pool_to_sample,
