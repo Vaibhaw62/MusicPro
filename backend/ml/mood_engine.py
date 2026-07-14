@@ -1,6 +1,7 @@
 from collections import Counter
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+import random 
 
 
 MOOD_PRESETS = {
@@ -155,15 +156,12 @@ class MoodEngine:
             f"[MoodEngine] Indexed {len(songs)} songs"
         )
 
-    # =====================================
-    # DISCOVER MOOD
-    # =====================================
-
     def discover(
         self,
         mood_name,
-        limit=15
-    ):
+        limit=25,
+        exclude_ids=None
+        ):
 
         mood_name = mood_name.lower()
         if len(self.songs) == 0:
@@ -171,6 +169,9 @@ class MoodEngine:
 
         if len(self.matrix) == 0:
             return []
+
+        exclude_ids = set(exclude_ids or [])
+
         mood_tokens = MOOD_PRESETS.get(
             mood_name,
             [mood_name]
@@ -195,25 +196,37 @@ class MoodEngine:
                 query[
                     self.index_lookup[key]
                 ] = value
-            if len(self.songs) == 0:
-                return []
 
-            if len(self.matrix) == 0:
-                return []
         similarities = cosine_similarity(
             [query],
             self.matrix
         )[0]
 
-        top_indices = np.argsort(
-            similarities
-        )[::-1][:limit]
+    # Widen the candidate pool instead of taking a strict top-N —
+    # this is what makes repeat clicks vary instead of always
+    # returning the exact same songs.
+        pool_size = min(limit * 5, len(self.songs))
+        candidate_indices = np.argsort(similarities)[::-1][:pool_size]
+
+    # Drop songs already shown to the user in this mood session
+        fresh_indices = [
+            idx for idx in candidate_indices
+            if str(self.songs[idx].get("id", self.songs[idx].get("_id", idx))) not in exclude_ids
+        ]
+
+    # If we've exhausted the fresh pool (user kept clicking), reset
+    # and allow repeats again rather than returning nothing.
+    pool_to_sample = fresh_indices if fresh_indices else list(candidate_indices)
+
+        chosen_indices = random.sample(
+            pool_to_sample,
+            min(limit, len(pool_to_sample))
+        )
 
         results = []
 
-        for idx in top_indices:
-            # 🟢 FIX: Copy the FULL song object from the database, not just the ID/Score
-            song = self.songs[idx].copy() 
+        for idx in chosen_indices:
+            song = self.songs[idx].copy()
             song["mood_score"] = float(similarities[idx])
             results.append(song)
 

@@ -46,6 +46,7 @@ class ExplainRequest(BaseModel):
 class MoodRequest(BaseModel):
     mood: str
     limit: int = 30
+    exclude_ids: list= []
 
 
 class HistoryRequest(BaseModel):
@@ -180,10 +181,10 @@ async def explain_song(
 @router.post("/discover-mood")
 async def discover_mood(payload: MoodRequest):
     try:
-        # Pass the payload limit to the engine
         results = mood_engine.discover(
             payload.mood,
-            limit=payload.limit 
+            limit=payload.limit,
+            exclude_ids=payload.exclude_ids   # NEW
         )
         explanation = mood_engine.explain(payload.mood)
         return {
@@ -192,8 +193,6 @@ async def discover_mood(payload: MoodRequest):
         }
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
-
-
 # =====================================================
 # USER HISTORY / TASTE PROFILE
 # =====================================================
