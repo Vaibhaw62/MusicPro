@@ -73,41 +73,12 @@ const BOT_STATES = {
 };
 
 const QUICK_ACTIONS = [
-  {
-    id: "surprise",
-    label: "🎵 Surprise Me",
-    icon: Sparkles
-  },
-
-  {
-    id: "romantic",
-    label: "❤️ Romantic",
-    icon: Heart
-  },
-
-  {
-    id: "workout",
-    label: "🏋️ Workout",
-    icon: TrendingUp
-  },
-
-  {
-    id: "rain",
-    label: "🌧 Rainy",
-    icon: Music2
-  },
-
-  {
-    id: "learn",
-    label: "🧠 Learn Taste",
-    icon: Brain
-  },
-
-  {
-    id: "fix_metadata",
-    label: "🧹 Fix Metadata",
-    icon: Wrench
-  }
+  { id: "surprise", label: "🎵 Surprise Me", icon: Sparkles },
+  { id: "romantic", label: "❤️ Romantic", icon: Heart },
+  { id: "workout", label: "🏋️ Workout", icon: TrendingUp },
+  { id: "rain", label: "🌧 Rainy", icon: Music2 },
+  { id: "daily_mix", label: "🎧 Daily Mix", icon: Music2 },
+  { id: "fix_metadata", label: "🧹 Fix Metadata", icon: Wrench }
 ];
 
 const MOOD_EMOTIONS = {
@@ -1809,18 +1780,25 @@ return (
                 Actions
               </h3>
               {QUICK_ACTIONS.map(action => {
-                const Icon = action.icon;
-                return (
-                  <button
-                    key={action.id}
-                    onClick={() => { handleQuickAction(action.id); setShowMobileStats(false); }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm bg-white/5 hover:bg-emerald-500/20 border border-white/5 transition-all"
-                  >
-                    <Icon size={16} />
-                    {action.label}
-                  </button>
-                );
-              })}
+  const Icon = action.icon;
+  return (
+    <button
+      key={action.id}
+      onClick={() => {
+        if (action.id === 'daily_mix') {
+          generatePlaylist();
+        } else {
+          handleQuickAction(action.id);
+        }
+        setShowMobileStats(false);
+      }}
+      className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm bg-white/5 hover:bg-emerald-500/20 border border-white/5 transition-all"
+    >
+      <Icon size={16} />
+      {action.label}
+    </button>
+  );
+})}
             </div>
 
             {/* MEMORY / TASTE PROFILE */}
@@ -1936,8 +1914,24 @@ return (
                 <div className="mb-3">
                   <VoiceVisualizer active />
                 </div>
-              )}
 
+              )}
+              <div className="flex justify-end mb-2">
+                <button
+                  onClick={() => handleQuickAction('learn')}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/5 hover:bg-emerald-500/20 border border-white/5 text-[11px] text-zinc-400 hover:text-cyan-400 transition-all"
+                >
+                  <Brain size={12} /> Learn Taste
+                </button>
+              </div>
+              <div className="flex justify-end mb-2">
+              <button
+                  onClick={() => discoverMood("chill")}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/5 hover:bg-emerald-500/20 border border-white/5 text-[11px] text-zinc-400 hover:text-cyan-400 transition-all"
+              >
+                    🌈 Chill Vibes
+              </button>
+              </div>
               {/* INPUT ROW */}
               <div className="flex gap-3">
                 <button
@@ -1972,9 +1966,6 @@ return (
 
               {/* FOOTER ACTIONS */}
               <div className="mt-4 flex justify-between items-center text-[11px] text-zinc-500">
-                <button onClick={generatePlaylist} className="hover:text-cyan-400 transition-colors">
-                  Daily Mix
-                </button>
                 <button onClick={() => discoverMood("chill")} className="hover:text-cyan-400 transition-colors">
                   🌈 Chill Vibes
                 </button>

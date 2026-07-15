@@ -77,10 +77,12 @@ export const fetchSongs = async (search, limit, genre, mood, listen, skip = 0, l
   }
 };
 
-export const fetchRecommendations = async (limit = 40) => {
+export const fetchRecommendations = async (limit = 60, userId = 'anonymous') => {
   try {
-    const response = await api.get('/recommendations', {
-      params: { limit },
+    const response = await api.post('/bot/personalized', {
+      user_id: userId,
+      history: [],
+      limit,
     });
     return response.data.results || [];
   } catch (error) {

@@ -26,6 +26,7 @@ const initialState = {
   selectedMood: 'all',
   selectedDuration: 'all',
   selectedLanguage: 'all',
+  filtersActive: false,
 };
 
 const songKey = (song) => String(song?.id || song?.msg_id || '');
@@ -196,19 +197,43 @@ const useMusicStore = create(
         get().fetchSongs();
       },
       setGenre: (genre) => {
-        set({ selectedGenre: genre, skip: 0, songs: [], hasMore: true });
+        set((state) => ({
+          selectedGenre: genre,
+          skip: 0,
+          songs: [],
+          hasMore: true,
+          filtersActive: genre !== 'all' || state.selectedMood !== 'all' || state.selectedDuration !== 'all' || state.selectedLanguage !== 'all',
+        }));
         get().fetchSongs();
       },
       setMood: (mood) => {
-        set({ selectedMood: mood, skip: 0, songs: [], hasMore: true });
+        set((state) => ({
+          selectedMood: mood,
+          skip: 0,
+          songs: [],
+          hasMore: true,
+          filtersActive: state.selectedGenre !== 'all' || mood !== 'all' || state.selectedDuration !== 'all' || state.selectedLanguage !== 'all',
+        }));
         get().fetchSongs();
       },
       setDuration: (duration) => {
-        set({ selectedDuration: duration, skip: 0, songs: [], hasMore: true });
+        set((state) => ({
+          selectedDuration: duration,
+          skip: 0,
+          songs: [],
+          hasMore: true,
+          filtersActive: state.selectedGenre !== 'all' || state.selectedMood !== 'all' || duration !== 'all' || state.selectedLanguage !== 'all',
+        }));
         get().fetchSongs();
       },
       setLanguage: (language) => {
-        set({ selectedLanguage: language, skip: 0, songs: [], hasMore: true });
+        set((state) => ({
+          selectedLanguage: language,
+          skip: 0,
+          songs: [],
+          hasMore: true,
+          filtersActive: state.selectedGenre !== 'all' || state.selectedMood !== 'all' || state.selectedDuration !== 'all' || language !== 'all',
+        }));
         get().fetchSongs();
         get().syncToCloud();
       },
@@ -237,22 +262,32 @@ const useMusicStore = create(
           hasMore,
           isLoading,
         } = get();
-
+      
         if (isLoading || (isLoadMore && !hasMore)) return;
         set({ isLoading: true });
-
+      
         try {
           const limit = 50;
-          const results = await fetchSongsApi(
-            searchQuery,
-            limit,
-            selectedGenre,
-            selectedMood,
-            selectedDuration,
-            isLoadMore ? skip : 0,
-            selectedLanguage,
-          );
-
+          let results;
+      
+          if (searchQuery && searchQuery.trim()) {
+            const res = await axios.post(`${API_URL}/bot/search`, {
+              query: searchQuery.trim(),
+              limit,
+            });
+            results = res.data?.results || [];
+          } else {
+            results = await fetchSongsApi(
+              searchQuery,
+              limit,
+              selectedGenre,
+              selectedMood,
+              selectedDuration,
+              isLoadMore ? skip : 0,
+              selectedLanguage,
+            );
+          }
+      
           const incoming = (results || []).map(sanitizeSong);
           set((state) => {
             const merged = uniqueBySong([...(isLoadMore ? state.songs : []), ...incoming]);
@@ -270,13 +305,9 @@ const useMusicStore = create(
       },
 
       fetchRecommendations: async () => {
-        const { likedSongs, recentlyPlayed, playEvents } = get();
-        if (!likedSongs.length && !recentlyPlayed.length && !playEvents.length) {
-          set({ recommendations: [], isRecommendationsLoading: false });
-          return;
-        }
+        const { user } = get();
         set({ isRecommendationsLoading: true });
-        const results = await fetchRecommendationsApi(40);
+        const results = await fetchRecommendationsApi(60, user?.username || 'anonymous');
         set({
           recommendations: uniqueBySong((results || []).map(sanitizeSong)),
           isRecommendationsLoading: false,
@@ -399,9 +430,11 @@ const useMusicStore = create(
           selectedMood: 'all',
           selectedDuration: 'all',
           selectedLanguage: 'all',
+          filtersActive: false,
           view: 'home',
         });
         get().fetchSongs();
+        get().fetchRecommendations(); 
         get().syncToCloud();
       },
     }),

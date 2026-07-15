@@ -32,10 +32,10 @@ const App = () => {
     currentSong,
     view,
     setView,
-    duration,
-    genre,
-    mood,
-    language,
+    selectedDuration,
+    selectedGenre,
+    selectedMood,
+    selectedLanguage,
     setDuration,
     setGenre,
     setMood,
@@ -178,22 +178,22 @@ const App = () => {
     <div className={`hidden md:block z-40 fixed h-full transition-all duration-300 w-72 ${isDesktopSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       {view === 'search' ? (
         <RefineSidebar 
-          handleFilterChange={(setter, val) => setter(val)} 
-          setGenre={setGenre}
-          setLanguage={setLanguage}
-          setDuration={setDuration}
-          setMood={setMood}
-          selectedGenre={genre}
-          selectedLanguage={language}
-          selectedDuration={duration}
-          selectedMood={mood}
-          resetFilters={() => {
-            setGenre('all');
-            setLanguage('all');
-            setDuration('all');
-            setMood('all');
-          }}
-        />
+        handleFilterChange={(setter, val) => setter(val)} 
+        setGenre={setGenre}
+        setLanguage={setLanguage}
+        setDuration={setDuration}
+        setMood={setMood}
+        selectedGenre={selectedGenre}
+        selectedLanguage={selectedLanguage}
+        selectedDuration={selectedDuration}
+        selectedMood={selectedMood}
+        resetFilters={() => {
+          setGenre('all');
+          setLanguage('all');
+          setDuration('all');
+          setMood('all');
+        }}
+      />
       ) : (
         <Sidebar />
       )}

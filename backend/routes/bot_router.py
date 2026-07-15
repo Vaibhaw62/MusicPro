@@ -53,9 +53,8 @@ class HistoryRequest(BaseModel):
     user_id: str
 
 class PersonalizedRequest(BaseModel):
-
+    user_id: str = "anonymous"
     history: list = []
-
     limit: int = 20
 
 class ExplainRecommendationRequest(BaseModel):
@@ -187,7 +186,7 @@ async def discover_mood(payload: MoodRequest):
         results = mood_engine.discover(
             payload.mood,
             limit=payload.limit,
-            exclude_ids=payload.exclude_ids   # NEW
+            exclude_ids=payload.exclude_ids
         )
         explanation = mood_engine.explain(payload.mood)
         return {
@@ -641,3 +640,5 @@ async def keyword_search(payload: KeywordSearchRequest):
         "query": query,
         "matched_tokens": tokens
     }
+    
+    
