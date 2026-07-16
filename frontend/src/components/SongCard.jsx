@@ -1,6 +1,6 @@
 import React from 'react';
 import { AlertCircle, Clock3, Heart, Play } from 'lucide-react';
-import useMusicStore from '../musicStore';
+import useMusicStore, { getCoverFallback } from '../musicStore';
 
 const SongCard = ({ song }) => {
   const { setCurrentSong, currentSong, likedSongs, toggleLike } = useMusicStore();
@@ -24,12 +24,12 @@ const SongCard = ({ song }) => {
       >
         <div className="relative aspect-square mb-4 overflow-hidden rounded-lg shadow-2xl bg-zinc-800">
           <img
-            src={song.album_art || 'https://placehold.co/300'}
+            src={song.album_art || getCoverFallback(song.title)}
             alt={song.title || 'Unknown Song'}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             onError={(event) => {
               event.currentTarget.onerror = null;
-              event.currentTarget.src = 'https://placehold.co/300?text=No+Cover';
+              event.currentTarget.src = getCoverFallback(song.title);
             }}
           />
 

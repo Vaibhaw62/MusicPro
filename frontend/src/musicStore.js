@@ -271,7 +271,10 @@ const useMusicStore = create(
           let results;
       
           if (searchQuery && searchQuery.trim()) {
-            const res = await axios.post(`${API_URL}/bot/search`, {
+            // Same call Vibe AI's chat search uses — robust semantic matching
+            // (partial words, year, mood/genre/artist/album keywords, etc.)
+            // instead of the old plain keyword regex search.
+            const res = await axios.post(`${API_URL}/bot/semantic-search`, {
               query: searchQuery.trim(),
               limit,
             });

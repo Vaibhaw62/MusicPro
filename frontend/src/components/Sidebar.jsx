@@ -8,7 +8,6 @@ import {
   LogOut,
   Music2,
   RotateCcw,
-  Search,
 } from 'lucide-react';
 import useMusicStore from '../musicStore';
 
@@ -21,8 +20,6 @@ const Sidebar = ({ onNavigate }) => {
     likedSongs,
     recentlyPlayed,
     recommendations,
-    searchQuery,
-    setSearchQuery,
     selectedGenre,
     setGenre,
     selectedMood,
@@ -88,20 +85,6 @@ const Sidebar = ({ onNavigate }) => {
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 py-2 custom-scrollbar space-y-6">
-        <div>
-          <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-bold mb-4 px-2">Search</p>
-          <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-emerald-500 transition-colors" size={16} />
-            <input
-              type="text"
-              placeholder="Songs, artists, moods"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              className="w-full bg-zinc-900 border border-white/10 rounded-lg pl-11 pr-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all"
-            />
-          </div>
-        </div>
-
         <div className="flex flex-col gap-4">
           <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-bold px-2">Refine</p>
 

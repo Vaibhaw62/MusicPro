@@ -1815,7 +1815,7 @@ return (
           {/* =========================
                RIGHT PANEL (Chat)
              ========================= */}
-          <div className="flex-1 flex flex-col h-full bg-black/95 backdrop-blur-3xl relative pb-20">
+          <div className="flex-1 flex flex-col h-full bg-black/95 backdrop-blur-3xl relative pb-36">
 
             {/* CLOSE BUTTON */}
             <button
@@ -1868,7 +1868,7 @@ return (
                       {/* SONG RESULTS */}
                       {message.songs?.length > 0 && (
                         <div className="flex flex-col gap-3">
-                          {message.songs.slice(0, 5).map(song => (
+                          {message.songs.slice(0, 15).map(song => (
                             <div key={song.id || song.msg_id} className="bg-white/[0.04] border border-white/5 rounded-2xl p-3 hover:bg-white/[0.07] transition-all duration-300">
                               <div className="flex justify-between items-start gap-3">
                                 <div className="flex-1 min-w-0">
@@ -1916,21 +1916,19 @@ return (
                 </div>
 
               )}
-              <div className="flex justify-end mb-2">
+              <div className="flex justify-end items-center gap-2 mb-2">
                 <button
                   onClick={() => handleQuickAction('learn')}
                   className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/5 hover:bg-emerald-500/20 border border-white/5 text-[11px] text-zinc-400 hover:text-cyan-400 transition-all"
                 >
                   <Brain size={12} /> Learn Taste
                 </button>
-              </div>
-              <div className="flex justify-end mb-2">
-              <button
+                <button
                   onClick={() => discoverMood("chill")}
                   className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/5 hover:bg-emerald-500/20 border border-white/5 text-[11px] text-zinc-400 hover:text-cyan-400 transition-all"
-              >
-                    🌈 Chill Vibes
-              </button>
+                >
+                  🌈 Chill Vibes
+                </button>
               </div>
               {/* INPUT ROW */}
               <div className="flex gap-3">
@@ -1961,13 +1959,6 @@ return (
                   className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400 to-emerald-400 text-black flex items-center justify-center font-bold hover:scale-105 active:scale-95 transition-all"
                 >
                   {loading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-                </button>
-              </div>
-
-              {/* FOOTER ACTIONS */}
-              <div className="mt-4 flex justify-between items-center text-[11px] text-zinc-500">
-                <button onClick={() => discoverMood("chill")} className="hover:text-cyan-400 transition-colors">
-                  🌈 Chill Vibes
                 </button>
               </div>
             </div>

@@ -105,7 +105,7 @@ const MusicPlayer = () => {
 
       {/* PLAYER BAR */}
 {/* PLAYER BAR */}
-      <div className={`fixed bottom-16 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-white/10 transition-transform duration-300 z-50 ${isPlayerOpen ? 'translate-y-full' : 'translate-y-0'}`}>        <div className="max-w-screen-2xl mx-auto px-4 h-20 flex items-center justify-between gap-4">
+      <div className={`fixed bottom-16 left-0 md:left-72 right-0 bg-black/90 backdrop-blur-xl border-t border-white/10 transition-transform duration-300 z-50 ${isPlayerOpen ? 'translate-y-full' : 'translate-y-0'}`}>        <div className="max-w-screen-2xl mx-auto px-4 h-20 flex items-center justify-between gap-4">
           {/* 1. Song Info */}
           <div className="flex items-center gap-4 w-[30%] min-w-[140px]">
             <div className="relative group cursor-pointer" onClick={() => setPlayerOpen(true)}>

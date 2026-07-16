@@ -77,6 +77,7 @@ const SearchTab = () => {
           }
 
           setLocalQuery(transcript);
+          setSearchQuery(transcript, { keepView: true });
           setHasSearched(true);
         } catch (error) {
           console.error('Voice search processing failed:', error);

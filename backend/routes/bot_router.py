@@ -310,7 +310,7 @@ async def personalized_recommendations(payload: PersonalizedRequest):
     try:
         # 1. Fetch history from DB if payload history is empty
         if not payload.history or len(payload.history) == 0:
-            user_history = await history_collection.find({"user_id": payload.user_id}).sort("_id", -1).limit(50)
+            user_history = await history_collection.find({"user_id": payload.user_id}).sort("_id", -1).limit(50).to_list(length=50)
             payload.history = user_history
             
         # 2. If history is still empty (new user), return a safe surprise mix immediately
