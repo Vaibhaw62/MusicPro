@@ -79,9 +79,25 @@ const uniqueBySong = (songs) => {
   });
 };
 
+const COVER_PALETTE = ['#10b981', '#0ea5e9', '#8b5cf6', '#f59e0b', '#ef4444', '#ec4899', '#14b8a6', '#6366f1'];
+
+// Generates a small inline SVG data-URI (colored tile + song initial) so songs
+// with no saved cover_url show a real tile instead of a broken/placeholder box.
+export const getCoverFallback = (title = '') => {
+  const clean = (title || 'Music').trim();
+  const initial = clean.charAt(0).toUpperCase() || 'M';
+  let hash = 0;
+  for (let i = 0; i < clean.length; i++) {
+    hash = clean.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const color = COVER_PALETTE[Math.abs(hash) % COVER_PALETTE.length];
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><rect width="300" height="300" fill="${color}"/><text x="50%" y="50%" font-family="Arial, sans-serif" font-size="120" fill="white" text-anchor="middle" dominant-baseline="central">${initial}</text></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+};
+
 const sanitizeSong = (song) => {
   // Extract any valid existing image field sent from the backend collection pipeline
-  const fallbackArt = song?.album_art || song?.cover_url || song?.thumbnail_url || song?.cover || 'https://placehold.co/300';
+  const fallbackArt = song?.album_art || song?.cover_url || song?.thumbnail_url || song?.cover || getCoverFallback(song?.title);
   
   return {
     ...song,

@@ -9,7 +9,7 @@ import {
   Music2,
   RotateCcw,
 } from 'lucide-react';
-import useMusicStore from '../musicStore';
+import useMusicStore, { getCoverFallback } from '../musicStore';
 
 const Sidebar = ({ onNavigate }) => {
   const {
@@ -154,7 +154,7 @@ const Sidebar = ({ onNavigate }) => {
                   onClick={() => setCurrentSong(song)}
                   className="w-full flex items-center gap-3 rounded-lg p-2 text-left hover:bg-white/5 transition-colors"
                 >
-                  <img src={song.album_art || 'https://placehold.co/80'} alt="" className="w-9 h-9 rounded object-cover bg-zinc-800" />
+                  <img src={song.album_art || getCoverFallback(song.title)} alt="" className="w-9 h-9 rounded object-cover bg-zinc-800" />
                   <span className="min-w-0">
                     <span className="block text-sm text-white truncate">{song.title}</span>
                     <span className="block text-xs text-zinc-500 truncate">{song.artist}</span>

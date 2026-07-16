@@ -7,7 +7,7 @@ import Login from './components/Login';
 import MusicPlayer from './components/MusicPlayer';
 import Sidebar from './components/Sidebar';
 import SongCard from './components/SongCard';
-import useMusicStore from './musicStore';
+import useMusicStore, { getCoverFallback } from './musicStore';
 import MusicBot from "./components/musicbot";
 import SearchTab from './components/SearchTab';
 import RefineSidebar from './components/RefineSidebar'; 
@@ -462,7 +462,7 @@ const SongRow = ({ song, index, onPlay }) => (
     className="w-full flex items-center gap-4 rounded-lg p-3 bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 text-left transition-colors min-w-0"
   >
     <span className="w-7 text-xs text-zinc-600 font-mono shrink-0">{index + 1}</span>
-    <img src={song.album_art || 'https://placehold.co/80'} alt="" className="w-14 h-14 rounded object-cover bg-zinc-800 shrink-0" />
+    <img src={song.album_art || getCoverFallback(song.title)} alt="" className="w-14 h-14 rounded object-cover bg-zinc-800 shrink-0" />
     <span className="min-w-0 flex-1">
       <span className="block text-white font-medium truncate">{song.title}</span>
       <span className="block text-sm text-zinc-500 truncate">{song.artist}</span>

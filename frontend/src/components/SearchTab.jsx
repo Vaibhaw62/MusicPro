@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ArrowLeft, Mic, Clock, Play, X, SlidersHorizontal } from 'lucide-react';
 import toast from 'react-hot-toast';
-import useMusicStore from '../musicStore';
+import useMusicStore, { getCoverFallback } from '../musicStore';
 import voiceRecorder from '../services/voiceRecorder';
 import RefineSidebar from './RefineSidebar';
 
@@ -262,7 +262,7 @@ const SearchTab = () => {
                 displayResults.map((song) => (
                   <div key={song.id || song.msg_id} onClick={() => handlePlay(song)} className="flex items-center gap-4 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition-colors group">
                     <div className="relative">
-                      <img src={song.album_art || 'https://placehold.co/80'} alt="" className="w-14 h-14 rounded-md object-cover" />
+                      <img src={song.album_art || getCoverFallback(song.title)} alt="" className="w-14 h-14 rounded-md object-cover" />
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 rounded-md transition-opacity"><Play size={20} fill="white" className="text-white" /></div>
                     </div>
                     <div className="flex-1 min-w-0">

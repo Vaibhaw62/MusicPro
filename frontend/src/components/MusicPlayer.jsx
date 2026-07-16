@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Maximize2, Heart, ChevronUp, Repeat } from 'lucide-react';
-import useMusicStore from '../musicStore';
+import useMusicStore, { getCoverFallback } from '../musicStore';
 import { getStreamUrl } from '../api';
 
 const MusicPlayer = () => {
@@ -115,7 +115,7 @@ const MusicPlayer = () => {
                     currentSong.cover_url ||
                     currentSong.thumbnail_url ||
                     currentSong.cover ||
-                    "https://placehold.co/300"
+                    getCoverFallback(currentSong.title)
                     }
                 alt={currentSong.title}
                 className="w-12 h-12 rounded-md object-cover shadow-lg group-hover:opacity-80 transition-opacity"
